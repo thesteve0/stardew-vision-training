@@ -1,0 +1,100 @@
+{
+  "name": "stardew-vision-training ROCm PyTorch ML Training",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "stpousty-devcontainer",
+      "uid": "2112",
+      "gid": "2112",
+      "upgradePackages": false
+    }
+  },
+
+  "runArgs": [
+    "--device=/dev/kfd",
+    "--device=/dev/dri",
+    "--group-add=video",
+    "--group-add=105",
+    "--ipc=host",
+    "--shm-size=8G",
+    "--cap-add=SYS_PTRACE",
+    "--security-opt=seccomp=unconfined",
+    "--memory=20g",
+    "--cpus=8",
+    "--ulimit=memlock=-1",
+    "--ulimit=stack=67108864",
+    "--mount", "type=bind,source=${env:SSH_AUTH_SOCK},target=/tmp/ssh-agent.sock",
+    "--mount", "type=bind,source=${localEnv:HOME}/.config/gcloud,target=/home/stpousty-devcontainer/.config/gcloud,readonly",
+    "--add-host=host.docker.internal:host-gateway"
+  ],
+
+  "containerEnv": {
+    "HIP_VISIBLE_DEVICES": "0",
+    "ROCM_HOME": "/opt/rocm",
+    "ROCBLAS_USE_HIPBLASLT": "1",
+    "PYTHONPATH": "/workspaces/stardew-vision-training",
+    "HF_HOME": "/workspaces/stardew-vision-training/.cache/huggingface",
+    "TORCH_HOME": "/workspaces/stardew-vision-training/.cache/torch",
+    "TRANSFORMERS_CACHE": "/workspaces/stardew-vision-training/.cache/huggingface/transformers",
+    "MLFLOW_TRACKING_URI": "file:///workspaces/stardew-vision-training/experiments/mlruns",
+    "SSH_AUTH_SOCK": "/tmp/ssh-agent.sock",
+    "VIRTUAL_ENV": "${containerWorkspaceFolder}/.venv",
+    "ANTHROPIC_VERTEX_PROJECT_ID": "${localEnv:ANTHROPIC_VERTEX_PROJECT_ID}",
+    "ANTHROPIC_VERTEX_REGION": "${localEnv:ANTHROPIC_VERTEX_REGION}",
+    "CLAUDE_CODE_USE_VERTEX": "${localEnv:CLAUDE_CODE_USE_VERTEX}"
+  },
+
+  "workspaceFolder": "/workspaces/stardew-vision-training",
+  "remoteUser": "stpousty-devcontainer",
+
+  "remoteEnv": {
+    "PATH": "/home/stpousty-devcontainer/.local/bin:${containerEnv:PATH}"
+  },
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "files.watcherExclude": {
+          "**/.cache/**": true,
+          "**/experiments/**": true,
+          "**/datasets/**": true
+        },
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+          }
+        },
+        "ruff.enable": true,
+        "ruff.organizeImports": true
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "github.copilot",
+        "ms-toolsai.jupyter"
+      ]
+    }
+  },
+
+  "forwardPorts": [6006, 8888, 5000],
+
+  "postCreateCommand": ".devcontainer/setup-environment.sh",
+
+  "postStartCommand": "cat /workspaces/stardew-vision-training/GETTING_STARTED.md 2>/dev/null || true",
+
+  "hostRequirements": {
+    "gpu": "optional",
+    "memory": "24gb"
+  }
+}

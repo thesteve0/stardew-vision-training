@@ -1,0 +1,1 @@
+{item_name}: {description} Price: {price_per_unit}g each, buying {quantity} for {total_cost}g.
