@@ -22,13 +22,24 @@ os.environ.setdefault("PADDLEX_CACHE_DIR", "/tmp/.paddlex/cache")
 os.environ.setdefault("PADDLE_HUB_HOME", "/tmp/.paddlex/hub")
 os.environ.setdefault("PADDLE_OCR_BASE_DIR", "/tmp/.paddleocr")
 
+# Assets directory — sprites, manifest, templates
+_ASSETS_DIR = Path(
+    os.getenv(
+        "ASSETS_DIR",
+        str(Path(__file__).resolve().parent.parent / "datasets" / "assets"),
+    )
+)
+
 # Templates directory — layout JSONs live here
 _TEMPLATES_DIR = Path(
     os.getenv(
         "TEMPLATES_DIR",
-        str(Path(__file__).resolve().parent.parent / "datasets" / "assets" / "templates"),
+        str(_ASSETS_DIR / "templates"),
     )
 )
+
+_SPRITES_DIR = _ASSETS_DIR / "sprites"
+_MANIFEST_PATH = _ASSETS_DIR / "item_manifest.json"
 
 # ---------------------------------------------------------------------------
 # PaddleOCR lazy loading
@@ -251,6 +262,50 @@ def run_ocr(
     records = sort_reading_order(records)
 
     return records
+
+
+# ---------------------------------------------------------------------------
+# Fish sprite & manifest loading
+# ---------------------------------------------------------------------------
+
+_FISH_NAMES: dict[int, str] | None = None
+_FISH_SPRITES: dict[int, np.ndarray] | None = None
+
+
+def load_manifest_fish() -> dict[int, str]:
+    """Load item manifest and return fish lookup: sprite_index → fish name.
+
+    Cached after first call.
+    """
+    global _FISH_NAMES
+    if _FISH_NAMES is None:
+        if not _MANIFEST_PATH.exists():
+            raise FileNotFoundError(f"Item manifest not found: {_MANIFEST_PATH}")
+        with open(_MANIFEST_PATH) as f:
+            data = json.load(f)
+        _FISH_NAMES = {}
+        for item in data.values():
+            if isinstance(item, dict) and item.get("type") == "Fish":
+                idx = item.get("sprite_index")
+                name = item.get("name")
+                if idx is not None and name is not None:
+                    _FISH_NAMES[idx] = name
+    return _FISH_NAMES
+
+
+def load_fish_sprites() -> dict[int, np.ndarray]:
+    """Load all fish sprite images (16×16 RGBA). Cached after first call."""
+    global _FISH_SPRITES
+    if _FISH_SPRITES is None:
+        fish_names = load_manifest_fish()
+        _FISH_SPRITES = {}
+        for sprite_index in fish_names:
+            path = _SPRITES_DIR / f"sprite_{sprite_index}.png"
+            if path.exists():
+                img = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
+                if img is not None:
+                    _FISH_SPRITES[sprite_index] = img
+    return _FISH_SPRITES
 
 
 def sort_reading_order(

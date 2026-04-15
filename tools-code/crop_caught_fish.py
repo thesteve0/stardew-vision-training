@@ -21,11 +21,16 @@ from pathlib import Path
 # Allow imports from tools-code directory
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import cv2
+import numpy as np
+
 from common import (
     crop_regions,
     decode_image_b64,
+    load_fish_sprites,
     load_image_from_path,
     load_layout,
+    load_manifest_fish,
     run_ocr,
 )
 
@@ -39,6 +44,101 @@ _LAYOUT_FILE = "caught_fish_layout.json"
 
 class FishNotFoundError(Exception):
     """Raised when the caught fish notification cannot be located or parsed."""
+
+
+# ---------------------------------------------------------------------------
+# Fish sprite matching
+# ---------------------------------------------------------------------------
+
+
+def match_fish_sprite(
+    fish_sprite_crop: np.ndarray,
+    frame_margin: float = 0.15,
+    scale_range: tuple[int, int] = (6, 18),
+    match_threshold: float = 0.80,
+) -> dict:
+    """Identify the fish by template matching against the sprite library.
+
+    Steps:
+        1. Strip the wooden frame border (inner crop using frame_margin)
+        2. Scale each of the 83 fish sprites up at multiple integer factors
+        3. Run cv2.matchTemplate (TM_CCOEFF_NORMED) for each
+        4. Return the best match above threshold, with fish name from manifest
+
+    Parameters
+    ----------
+    fish_sprite_crop:
+        Cropped image of the fish in its wooden frame (BGR numpy array).
+    frame_margin:
+        Fraction of width/height to trim on each side to remove the frame.
+    scale_range:
+        (min_scale, max_scale) integer range for nearest-neighbor upscaling.
+    match_threshold:
+        Minimum match score (0.0–1.0) to accept a result.
+
+    Returns
+    -------
+    dict with keys: fish_name, sprite_index, match_score.
+    fish_name is None if no match above threshold.
+    """
+    # Strip the wooden frame
+    h, w = fish_sprite_crop.shape[:2]
+    mx = int(w * frame_margin)
+    my = int(h * frame_margin)
+    inner = fish_sprite_crop[my : h - my, mx : w - mx]
+
+    # Ensure BGR (3-channel)
+    if inner.shape[2] == 4:
+        inner = cv2.cvtColor(inner, cv2.COLOR_BGRA2BGR)
+
+    fish_sprites = load_fish_sprites()
+    fish_names = load_manifest_fish()
+
+    best_score = -1.0
+    best_index = -1
+    best_scale = -1
+
+    inner_h, inner_w = inner.shape[:2]
+
+    for sprite_index, sprite_rgba in fish_sprites.items():
+        # Composite RGBA sprite onto white background for matching
+        if sprite_rgba.shape[2] == 4:
+            alpha = sprite_rgba[:, :, 3:4].astype(np.float32) / 255.0
+            bgr = sprite_rgba[:, :, :3].astype(np.float32)
+            white_bg = np.full_like(bgr, 255.0)
+            composited = (bgr * alpha + white_bg * (1.0 - alpha)).astype(np.uint8)
+        else:
+            composited = sprite_rgba
+
+        for scale in range(scale_range[0], scale_range[1]):
+            scaled = cv2.resize(
+                composited, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST
+            )
+
+            # Template must fit inside search image
+            if scaled.shape[0] > inner_h or scaled.shape[1] > inner_w:
+                continue
+
+            result = cv2.matchTemplate(inner, scaled, cv2.TM_CCOEFF_NORMED)
+            _, max_val, _, _ = cv2.minMaxLoc(result)
+
+            if max_val > best_score:
+                best_score = max_val
+                best_index = sprite_index
+                best_scale = scale
+
+    if best_score < match_threshold:
+        return {
+            "fish_name": None,
+            "sprite_index": None,
+            "match_score": round(float(best_score), 4),
+        }
+
+    return {
+        "fish_name": fish_names.get(best_index, f"Unknown (sprite_{best_index})"),
+        "sprite_index": best_index,
+        "match_score": round(float(best_score), 4),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -97,8 +197,8 @@ def crop_caught_fish(image_b64: str, debug: bool = False) -> dict:
 
     Returns
     -------
-    dict with keys: screen_type, length_inches, ocr_text.
-    When debug=True, also includes: ocr_raw, fish_sprite_shape.
+    dict with keys: screen_type, fish_name, length_inches, ocr_text.
+    When debug=True, also includes: ocr_raw, sprite_match (full match details).
 
     Raises
     ------
@@ -123,10 +223,13 @@ def crop_caught_fish(image_b64: str, debug: bool = False) -> dict:
 
     fields = parse_caught_fish_fields(ocr_results)
 
+    # Fish identification via sprite matching
+    sprite_result = match_fish_sprite(fish_sprite_crop)
+    fields["fish_name"] = sprite_result["fish_name"]
+
     if debug:
         fields["ocr_raw"] = sorted(ocr_results, key=lambda r: r["rel_y"])
-        sprite_h, sprite_w = fish_sprite_crop.shape[:2]
-        fields["fish_sprite_shape"] = [sprite_w, sprite_h]
+        fields["sprite_match"] = sprite_result
 
     return fields
 
