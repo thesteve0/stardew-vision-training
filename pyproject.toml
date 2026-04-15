@@ -5,47 +5,27 @@ description = "Training repository for Stardew Vision VLM fine-tuning and datase
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    # Core ML frameworks (ROCm-provided torch MUST NOT be replaced)
-    # torch, torchvision provided by ROCm base image
-
-    # HuggingFace ecosystem
     "transformers>=4.48.0",
     "accelerate>=1.0.0",
     "peft>=0.14.0",
     "trl>=0.12.0",
     "datasets>=3.0.0",
     "evaluate>=0.4.0",
-
-    # VLM-specific
     "qwen-vl-utils>=0.0.8",
-
-    # Distributed training
     "ray[default,train]>=2.40.0",
     "deepspeed>=0.15.0",
-
-    # Experiment tracking
     "mlflow>=2.16.0",
-
-    # OCR and CV (for extraction tools)
     "paddleocr>=2.9.0",
-    "paddlepaddle==3.2.0",  # MUST be 3.2.0 - 3.3.0 has OneDNN PIR bug
+    "paddlepaddle==3.2.0",
     "opencv-python>=4.10.0",
-
-    # Data processing
     "pillow>=11.0.0",
     "numpy>=2.0.0",
     "pandas>=2.2.0",
-
-    # Synthetic data generation
-    "openai>=1.0.0",  # For LLM-based synthetic generation
-
-    # Utilities
+    "openai>=1.0.0",
     "pyyaml>=6.0.0",
     "tqdm>=4.66.0",
     "jsonlines>=4.0.0",
     "python-dotenv>=1.0.0",
-
-    # Testing
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
 ]
@@ -58,11 +38,12 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = [
+    "hatchling",
+]
 build-backend = "hatchling.build"
 
 [tool.uv]
-# Protect ROCm-provided packages from pip overwrite
 exclude-dependencies = [
     "torch",
     "torchvision",
@@ -75,11 +56,21 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W"]
-ignore = ["E501"]  # Line too long (handled by formatter)
+select = [
+    "E",
+    "F",
+    "I",
+    "N",
+    "W",
+]
+ignore = [
+    "E501",
+]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = [
+    "tests",
+]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"

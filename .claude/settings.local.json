@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(domain:www.bestbuy.com)",
+      "Bash(file:*)",
+      "Bash(gh api:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}
