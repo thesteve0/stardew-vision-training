@@ -72,14 +72,53 @@ def load_ocr():
 # ---------------------------------------------------------------------------
 
 
+def strip_letterbox(image: np.ndarray, threshold: float = 10.0) -> np.ndarray:
+    """Remove black letterbox borders from a screenshot.
+
+    Scans rows and columns for near-black regions (mean pixel value below
+    *threshold*) and crops to the content area. Safe to call on images
+    without borders — returns the original array unchanged.
+
+    Parameters
+    ----------
+    image:
+        BGR numpy array.
+    threshold:
+        Maximum mean pixel value to consider a row/column as black border.
+    """
+    row_means = image.mean(axis=(1, 2))
+    col_means = image.mean(axis=(0, 2))
+
+    non_black_rows = np.where(row_means > threshold)[0]
+    non_black_cols = np.where(col_means > threshold)[0]
+
+    if len(non_black_rows) == 0 or len(non_black_cols) == 0:
+        return image
+
+    top = non_black_rows[0]
+    bottom = non_black_rows[-1] + 1
+    left = non_black_cols[0]
+    right = non_black_cols[-1] + 1
+
+    # Only crop if there's actually a border to remove
+    if top == 0 and bottom == image.shape[0] and left == 0 and right == image.shape[1]:
+        return image
+
+    return image[top:bottom, left:right].copy()
+
+
 def decode_image_b64(image_b64: str) -> np.ndarray:
-    """Decode a base64-encoded image to a BGR numpy array."""
+    """Decode a base64-encoded image to a BGR numpy array.
+
+    Automatically strips black letterbox borders so that downstream
+    layout coordinates (relative 0.0–1.0) align with actual game content.
+    """
     img_bytes = base64.b64decode(image_b64)
     img_array = np.frombuffer(img_bytes, dtype=np.uint8)
     img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
     if img is None:
         raise ValueError("Could not decode image from base64 data.")
-    return img
+    return strip_letterbox(img)
 
 
 def load_image_from_path(image_path: str | Path) -> str:

@@ -27,9 +27,10 @@ Each screenshot is annotated with:
 - `image_id`: UUID
 - `image_path`: Relative path to screenshot
 - `screen_type`: "tv_dialog"
-- `tv_show`: Specific show type (weather, fortune, cooking, tips)
 - `tool_call`: Expected extraction tool to call (TBD - may be `crop_tv_dialog`)
 - `ocr_fields`: Expected OCR output (dialog text)
+
+**Note on TV show classification:** The tool does not classify which TV show is playing (weather, fortune teller, etc.). The player selects the show from a menu before the dialog appears, so they already know which show they're watching. The tool focuses on extracting the dialog text for narration.
 - `narration`: Expected natural language narration
 
 ## Collection Guidelines

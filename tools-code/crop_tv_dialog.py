@@ -12,7 +12,6 @@ Architecture follows crop_pierres_detail_panel.py from the main repo.
 
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path
 
@@ -39,41 +38,18 @@ class DialogNotFoundError(Exception):
     """Raised when the TV dialog box cannot be located or OCR returns no text."""
 
 
-# ---------------------------------------------------------------------------
-# Field parsing
-# ---------------------------------------------------------------------------
-
-# Known TV show identifiers
-_TV_SHOW_PATTERNS = {
-    "weather_forecast": re.compile(r"weather|forecast|KOZU\s*5", re.IGNORECASE),
-    "fortune_teller": re.compile(r"fortune|spirits|luck", re.IGNORECASE),
-    "queen_of_sauce": re.compile(r"queen\s*of\s*sauce|recipe|cooking", re.IGNORECASE),
-    "livin_off_the_land": re.compile(
-        r"livin|off\s*the\s*land|tip", re.IGNORECASE
-    ),
-}
-
-
 def parse_tv_dialog_fields(ocr_results: list[dict]) -> dict:
     """Parse OCR results from a TV dialog box into structured fields.
 
     Returns
     -------
-    dict with keys: screen_type, tv_show, dialog_text
+    dict with keys: screen_type, dialog_text
     """
     # OCR results are already in reading order from run_ocr()
     dialog_text = " ".join(rec["text"].strip() for rec in ocr_results if rec["text"].strip())
 
-    # Detect TV show type from content
-    tv_show = "unknown"
-    for show_name, pattern in _TV_SHOW_PATTERNS.items():
-        if pattern.search(dialog_text):
-            tv_show = show_name
-            break
-
     return {
         "screen_type": "tv_dialog",
-        "tv_show": tv_show,
         "dialog_text": dialog_text,
     }
 
@@ -96,7 +72,7 @@ def crop_tv_dialog(image_b64: str, debug: bool = False) -> dict:
 
     Returns
     -------
-    dict with keys: screen_type, tv_show, dialog_text.
+    dict with keys: screen_type, dialog_text.
     When debug=True, also includes: ocr_raw (list[dict]).
 
     Raises

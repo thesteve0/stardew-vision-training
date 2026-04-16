@@ -141,8 +141,6 @@
 ```json
 {
   "screen_type": "tv_dialog",
-  "tv_show": "weather_forecast",
-  "channel": "KOZU 5",
   "dialog_text": "Welcome to KOZU 5... your number one source for weather, news, and entertainment. And now, the weather forecast for tomorrow..."
 }
 ```
@@ -182,7 +180,6 @@
   "fish_name": "Rainbow Trout",
   "fish_sprite_index": 138,
   "length": "23 in.",
-  "quality": "normal",
   "identification_method": "sprite_match"
 }
 ```

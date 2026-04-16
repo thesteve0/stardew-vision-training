@@ -63,12 +63,6 @@ datasets/tv_dialog/images/tv_tips_01.jpg
 - ☐ Rare/legendary fish: Pufferfish, Sturgeon, Legend
 - ☐ Different seasons (seasonal fish change)
 
-**Quality Variety**:
-- ☐ Normal quality (no star)
-- ☐ Silver star
-- ☐ Gold star
-- ☐ Iridium star
-
 **What to Capture**:
 - Fish caught notification popup showing:
   - Wooden frame with fish sprite visible
@@ -80,15 +74,14 @@ datasets/tv_dialog/images/tv_tips_01.jpg
 ```
 datasets/caught_fish/images/fish_anchovy_01.jpg
 datasets/caught_fish/images/fish_trout_01.jpg
-datasets/caught_fish/images/fish_bass_silver_01.jpg
-datasets/caught_fish/images/fish_pufferfish_gold_01.jpg
+datasets/caught_fish/images/fish_bass_01.jpg
+datasets/caught_fish/images/fish_pufferfish_01.jpg
 ```
 
 **Collection Tips**:
 - Fish in different locations for variety
 - Screenshot immediately when "You caught..." notification appears
 - Don't worry that fish name is cropped — that's expected
-- Try to get different quality levels (fishing skill + tackle affects this)
 - Include at least one legendary/rare fish if possible
 
 **Current Status**: 1/15 collected (which_fish.jpg - unknown species, 23 in.)
@@ -105,7 +98,7 @@ datasets/caught_fish/images/fish_pufferfish_gold_01.jpg
 4. **Write ground truth annotation** to annotations.jsonl:
 
 ```jsonl
-{"image_id": "uuid", "image_path": "images/tv_weather_01.jpg", "screen_type": "tv_dialog", "tv_show": "weather_forecast", "dialog_text": "Welcome to KOZU 5...", "narration": "TV weather forecast: ...", "timestamp": "2026-04-13T..."}
+{"image_id": "uuid", "image_path": "images/tv_weather_01.jpg", "screen_type": "tv_dialog", "dialog_text": "Welcome to KOZU 5...", "narration": "Welcome to KOZU 5...", "timestamp": "2026-04-13T..."}
 ```
 
 5. **Add to quality report**: Track OCR accuracy, template matching success rate
@@ -120,12 +113,10 @@ datasets/caught_fish/images/fish_pufferfish_gold_01.jpg
   "timestamp": "2026-04-13T10:30:00Z",
   
   "ocr_fields": {
-    "tv_show": "weather_forecast",
-    "channel": "KOZU 5",
     "dialog_text": "Welcome to KOZU 5... your number one source for weather, news, and entertainment. And now, the weather forecast for tomorrow..."
   },
   
-  "narration": "TV weather forecast: Welcome to KOZU 5, your number one source for weather, news, and entertainment. And now, the weather forecast for tomorrow...",
+  "narration": "Welcome to KOZU 5, your number one source for weather, news, and entertainment. And now, the weather forecast for tomorrow...",
   
   "tool_call": "crop_tv_dialog",
   
@@ -150,7 +141,6 @@ datasets/caught_fish/images/fish_pufferfish_gold_01.jpg
 ### caught_fish
 - ☐ 15-20 total screenshots
 - ☐ At least 10 different fish species (for sprite matching variety)
-- ☐ Multiple quality levels (normal, silver, gold, iridium)
 - ☐ Fish sprite clearly visible in wooden frame
 - ☐ Length text readable
 
@@ -220,8 +210,6 @@ Update this section as screenshots are collected:
 - [ ] Common ocean fish (0)
 - [ ] Common river fish (0)
 - [ ] Rare/legendary fish (0)
-- [ ] Quality variety (0 silver, 0 gold, 0 iridium)
-
 ---
 
 ## Notes

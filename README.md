@@ -168,7 +168,7 @@ python scripts/upload_to_hub.py \
     {
       "role": "tool",
       "name": "crop_tv_dialog",
-      "content": "{\"tv_show\": \"weather_forecast\", \"dialog_text\": \"...\"}"
+      "content": "{\"dialog_text\": \"...\"}"
     },
     {
       "role": "assistant",
