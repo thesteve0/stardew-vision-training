@@ -4,6 +4,10 @@
 
 This dataset contains screenshots of the "fish caught" notification screen that appears immediately after successfully catching a fish in Stardew Valley.
 
+Here is a complete list of the different
+fish and catchable things in the game https://stardewvalleywiki.com/Fish and Trash
+https://stardewvalleywiki.com/Trash
+
 ## Screen Characteristics
 
 **Visual elements:**
