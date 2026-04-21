@@ -429,7 +429,7 @@ def _get_fish_notification_rect(
 _PIERRE_PANEL = {"x": 0.6875, "y": 0.129, "w": 0.25, "h": 0.7875}
 # Sub-regions within the panel (relative to panel)
 _PIERRE_TEXT_TOP = 0.02  # start of text area from panel top
-_PIERRE_TEXT_BOTTOM = 0.85  # end of text area (above the price bar)
+_PIERRE_TEXT_BOTTOM = 0.98  # clear all the way down (includes price bar)
 _PIERRE_TEXT_HPAD = 0.05  # horizontal padding
 
 
@@ -546,31 +546,16 @@ def composite_pierre_shop(
     )
     draw_img.paste(price_img, (text_x1, y_cursor), price_img)
 
-    # Clear and re-render the price bar at the bottom of the panel
-    # The price bar shows "xQUANTITY: TOTAL" on a gold/brown bar
+    # Render the quantity × total at the bottom of the cleared panel area
     if quantity is not None and total_cost is not None:
-        bar_y1 = py1 + int(panel_h * 0.88)
-        bar_y2 = py2 - int(panel_h * 0.02)
-        bar_x1 = px1 + int(panel_w * 0.08)
-        bar_x2 = px2 - int(panel_w * 0.08)
-
-        # Sample and fill the bar background
-        arr = np.array(draw_img)
-        bar_bg = _sample_bg_color(draw_img, (bar_x1, bar_y1, bar_x2, bar_y2))
-        arr[bar_y1:bar_y2, bar_x1:bar_x2, :3] = bar_bg
-        draw_img = Image.fromarray(arr)
-
-        # Render the quantity × total text
         bar_text = f"x{quantity}: {total_cost}g"
         bar_img = ui_font.render_text(
             bar_text, color=text_color,
             shadow_color=shadow_color, shadow_offset=shadow_offset,
         )
-        # Center in the bar
-        bar_w = bar_x2 - bar_x1
-        bar_h = bar_y2 - bar_y1
-        bar_paste_x = bar_x1 + (bar_w - bar_img.width) // 2
-        bar_paste_y = bar_y1 + (bar_h - bar_img.height) // 2
+        # Place near the bottom of the text area
+        bar_paste_x = text_x1 + (text_w - bar_img.width) // 2
+        bar_paste_y = text_y2 - bar_img.height - 8
         draw_img.paste(bar_img, (bar_paste_x, bar_paste_y), bar_img)
 
     return draw_img

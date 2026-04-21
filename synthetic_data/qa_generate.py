@@ -87,6 +87,9 @@ def generate_tv_dialog(n: int, out_dir: Path):
         # Even distribution across show types (round-robin)
         show_type = available_types[i % len(available_types)]
         dialog_text = random.choice(dialogs_by_type[show_type])
+        # Cap at ~200 chars (game breaks long text across multiple pages)
+        from synthetic_data.blocks.tv_dialog_sampler import _truncate_to_page
+        dialog_text = _truncate_to_page(dialog_text)
         bg = random.choice(backgrounds)
 
         img = composite_tv_dialog(str(bg), dialog_text)
@@ -140,18 +143,23 @@ def generate_caught_fish(n: int, out_dir: Path):
     with open(manifest_path) as f:
         manifest = json.load(f)
 
-    # Items that don't display length (trash, algae, seaweed, joja cola, jellies)
+    # Items that show notification WITHOUT length
     no_length_ids = {
-        "152", "153", "157",                    # Seaweed, Green Algae, White Algae
         "167", "168", "169", "170", "171", "172",  # Joja Cola, Trash, Driftwood, etc.
+    }
+    # Items that NEVER show the caught fish notification (exclude entirely)
+    exclude_ids = {
+        "152", "153", "157",                    # Seaweed, Green Algae, White Algae
         "SeaJelly", "CaveJelly", "RiverJelly",  # Jellies
     }
 
-    # Split into fish (with length) and non-fish (no length)
+    # Split into fish (with length) and junk (no length)
     real_fish = []
     junk_items = []
     for item_id, item in manifest.items():
         if item.get("type") != "Fish":
+            continue
+        if item_id in exclude_ids:
             continue
         if item_id in no_length_ids:
             junk_items.append((item_id, item))

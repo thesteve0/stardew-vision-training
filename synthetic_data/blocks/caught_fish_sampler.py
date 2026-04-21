@@ -23,10 +23,15 @@ _LENGTH_RANGES = {
     "trash": None,  # no length for trash items
 }
 
-# Items that don't display length (trash, algae, seaweed, joja cola, jellies)
+# Items that show the notification but WITHOUT length text
 _NO_LENGTH_IDS = {
-    "152", "153", "157",                        # Seaweed, Green Algae, White Algae
     "167", "168", "169", "170", "171", "172",   # Joja Cola, Trash, Driftwood, etc.
+}
+
+# Items that NEVER show the caught fish notification (immediately picked up)
+# These should be excluded from the caught fish dataset entirely.
+_EXCLUDE_IDS = {
+    "152", "153", "157",                        # Seaweed, Green Algae, White Algae
     "SeaJelly", "CaveJelly", "RiverJelly",      # Jellies
 }
 
@@ -46,10 +51,13 @@ class CaughtFishSamplerBlock(BaseBlock):
             manifest = json.load(f)
 
         # Split catchable items into fish (with length) and junk (no length)
+        # Exclude items that never show the caught fish notification
         real_fish = []
         junk_items = []
         for item_id, item in manifest.items():
             if item.get("type") != "Fish":
+                continue
+            if item_id in _EXCLUDE_IDS:
                 continue
             entry = {
                 "item_id": item_id,
