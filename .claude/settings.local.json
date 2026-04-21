@@ -7,7 +7,31 @@
       "WebFetch(domain:www.bestbuy.com)",
       "Bash(file:*)",
       "Bash(gh api:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:youtrack.jetbrains.com)",
+      "WebFetch(domain:www.reddit.com)",
+      "WebFetch(domain:stackoverflow.com)",
+      "WebFetch(domain:www.jetbrains.com)",
+      "WebFetch(domain:containers.dev)",
+      "WebFetch(domain:intellij-support.jetbrains.com)",
+      "WebFetch(domain:plugins.jetbrains.com)",
+      "WebFetch(domain:blog.jetbrains.com)",
+      "WebFetch(domain:www.google.com)",
+      "WebFetch(domain:www.bing.com)",
+      "WebFetch(domain:duckduckgo.com)",
+      "Bash(find /workspaces/stardew-vision-training/datasets/assets/sprites* -type f)",
+      "Bash(ls -1 /workspaces/stardew-vision-training/datasets/assets/sprites_game/*.png)",
+      "WebFetch(domain:stardewvalleywiki.com)",
+      "Bash(pip install:*)",
+      "Bash(ls -la /workspaces/stardew-vision-training/.venv/lib/python*/site-packages/)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:paddlepaddle.github.io)",
+      "WebFetch(domain:www.paddleocr.ai)",
+      "WebFetch(domain:developers.redhat.com)",
+      "WebFetch(domain:timc.me)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:ai-innovation.team)"
     ]
   }
 }

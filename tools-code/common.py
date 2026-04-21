@@ -307,12 +307,12 @@ def run_ocr(
 # Fish sprite & manifest loading
 # ---------------------------------------------------------------------------
 
-_FISH_NAMES: dict[int, str] | None = None
-_FISH_SPRITES: dict[int, np.ndarray] | None = None
+_FISH_NAMES: dict[str, str] | None = None
+_FISH_SPRITES: dict[str, np.ndarray] | None = None
 
 
-def load_manifest_fish() -> dict[int, str]:
-    """Load item manifest and return fish lookup: sprite_index → fish name.
+def load_manifest_fish() -> dict[str, str]:
+    """Load item manifest and return fish lookup: item_id → fish name.
 
     Cached after first call.
     """
@@ -323,27 +323,37 @@ def load_manifest_fish() -> dict[int, str]:
         with open(_MANIFEST_PATH) as f:
             data = json.load(f)
         _FISH_NAMES = {}
-        for item in data.values():
+        for item_id, item in data.items():
             if isinstance(item, dict) and item.get("type") == "Fish":
-                idx = item.get("sprite_index")
                 name = item.get("name")
-                if idx is not None and name is not None:
-                    _FISH_NAMES[idx] = name
+                if name is not None:
+                    _FISH_NAMES[item_id] = name
     return _FISH_NAMES
 
 
-def load_fish_sprites() -> dict[int, np.ndarray]:
-    """Load all fish sprite images (16×16 RGBA). Cached after first call."""
+def load_fish_sprites() -> dict[str, np.ndarray]:
+    """Load all fish sprite images (16x16 RGBA). Cached after first call.
+
+    Uses the ``sprite_file`` field from the manifest so that items with
+    string IDs (v1.6+) are loaded correctly.
+    """
     global _FISH_SPRITES
     if _FISH_SPRITES is None:
-        fish_names = load_manifest_fish()
+        if not _MANIFEST_PATH.exists():
+            raise FileNotFoundError(f"Item manifest not found: {_MANIFEST_PATH}")
+        with open(_MANIFEST_PATH) as f:
+            data = json.load(f)
         _FISH_SPRITES = {}
-        for sprite_index in fish_names:
-            path = _SPRITES_DIR / f"sprite_{sprite_index}.png"
-            if path.exists():
-                img = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
-                if img is not None:
-                    _FISH_SPRITES[sprite_index] = img
+        for item_id, item in data.items():
+            if isinstance(item, dict) and item.get("type") == "Fish":
+                sprite_file = item.get("sprite_file")
+                if sprite_file is None:
+                    continue
+                path = _ASSETS_DIR / sprite_file
+                if path.exists():
+                    img = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
+                    if img is not None:
+                        _FISH_SPRITES[item_id] = img
     return _FISH_SPRITES
 
 

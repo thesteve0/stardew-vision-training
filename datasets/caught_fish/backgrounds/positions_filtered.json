@@ -1,0 +1,470 @@
+{
+  "IMG_0016.png": {
+    "notification": {
+      "x": 405,
+      "y": 582,
+      "w": 798,
+      "h": 271
+    },
+    "fish_frame": null,
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0018.png": {
+    "notification": {
+      "x": 487,
+      "y": 591,
+      "w": 628,
+      "h": 315
+    },
+    "fish_frame": {
+      "x": 571,
+      "y": 634,
+      "w": 185,
+      "h": 21
+    },
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0019.png": {
+    "notification": {
+      "x": 479,
+      "y": 595,
+      "w": 656,
+      "h": 309
+    },
+    "fish_frame": {
+      "x": 529,
+      "y": 690,
+      "w": 43,
+      "h": 135
+    },
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0020.png": {
+    "notification": {
+      "x": 484,
+      "y": 591,
+      "w": 644,
+      "h": 298
+    },
+    "fish_frame": null,
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0030.png": {
+    "notification": {
+      "x": 408,
+      "y": 588,
+      "w": 801,
+      "h": 242
+    },
+    "fish_frame": {
+      "x": 485,
+      "y": 599,
+      "w": 255,
+      "h": 146
+    },
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0031.png": {
+    "notification": {
+      "x": 496,
+      "y": 600,
+      "w": 620,
+      "h": 305
+    },
+    "fish_frame": {
+      "x": 540,
+      "y": 633,
+      "w": 216,
+      "h": 204
+    },
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0032.png": {
+    "notification": {
+      "x": 503,
+      "y": 596,
+      "w": 599,
+      "h": 325
+    },
+    "fish_frame": null,
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0033.png": {
+    "notification": {
+      "x": 501,
+      "y": 603,
+      "w": 604,
+      "h": 307
+    },
+    "fish_frame": null,
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0034.png": {
+    "notification": {
+      "x": 531,
+      "y": 612,
+      "w": 554,
+      "h": 329
+    },
+    "fish_frame": null,
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0035.png": {
+    "notification": {
+      "x": 465,
+      "y": 590,
+      "w": 687,
+      "h": 306
+    },
+    "fish_frame": null,
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0036.png": {
+    "notification": {
+      "x": 465,
+      "y": 591,
+      "w": 690,
+      "h": 273
+    },
+    "fish_frame": null,
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0037.png": {
+    "notification": {
+      "x": 460,
+      "y": 589,
+      "w": 702,
+      "h": 290
+    },
+    "fish_frame": null,
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0038.png": {
+    "notification": {
+      "x": 462,
+      "y": 583,
+      "w": 682,
+      "h": 310
+    },
+    "fish_frame": null,
+    "img_w": 1640,
+    "img_h": 2360
+  },
+  "IMG_0047.png": {
+    "notification": {
+      "x": 585,
+      "y": 0,
+      "w": 1159,
+      "h": 332
+    },
+    "fish_frame": {
+      "x": 685,
+      "y": 0,
+      "w": 355,
+      "h": 205
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0048.png": {
+    "notification": {
+      "x": 701,
+      "y": 0,
+      "w": 924,
+      "h": 440
+    },
+    "fish_frame": {
+      "x": 1052,
+      "y": 121,
+      "w": 9,
+      "h": 196
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0049.png": {
+    "notification": {
+      "x": 700,
+      "y": 0,
+      "w": 925,
+      "h": 427
+    },
+    "fish_frame": {
+      "x": 810,
+      "y": 54,
+      "w": 247,
+      "h": 38
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0050.png": {
+    "notification": {
+      "x": 704,
+      "y": 0,
+      "w": 920,
+      "h": 442
+    },
+    "fish_frame": {
+      "x": 782,
+      "y": 53,
+      "w": 297,
+      "h": 275
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0051.png": {
+    "notification": {
+      "x": 702,
+      "y": 0,
+      "w": 932,
+      "h": 418
+    },
+    "fish_frame": {
+      "x": 780,
+      "y": 32,
+      "w": 302,
+      "h": 278
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0052.png": {
+    "notification": {
+      "x": 706,
+      "y": 0,
+      "w": 922,
+      "h": 422
+    },
+    "fish_frame": null,
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0053.png": {
+    "notification": {
+      "x": 710,
+      "y": 0,
+      "w": 917,
+      "h": 413
+    },
+    "fish_frame": null,
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0071.png": {
+    "notification": {
+      "x": 769,
+      "y": 24,
+      "w": 789,
+      "h": 467
+    },
+    "fish_frame": {
+      "x": 843,
+      "y": 176,
+      "w": 19,
+      "h": 44
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0072.png": {
+    "notification": {
+      "x": 751,
+      "y": 0,
+      "w": 833,
+      "h": 462
+    },
+    "fish_frame": {
+      "x": 825,
+      "y": 183,
+      "w": 39,
+      "h": 195
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0073.png": {
+    "notification": {
+      "x": 671,
+      "y": 0,
+      "w": 978,
+      "h": 392
+    },
+    "fish_frame": {
+      "x": 763,
+      "y": 14,
+      "w": 297,
+      "h": 282
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0074.png": {
+    "notification": {
+      "x": 669,
+      "y": 0,
+      "w": 984,
+      "h": 392
+    },
+    "fish_frame": {
+      "x": 758,
+      "y": 2,
+      "w": 310,
+      "h": 291
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0075.png": {
+    "notification": {
+      "x": 596,
+      "y": 0,
+      "w": 1119,
+      "h": 346
+    },
+    "fish_frame": {
+      "x": 704,
+      "y": 10,
+      "w": 339,
+      "h": 202
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0076.png": {
+    "notification": {
+      "x": 695,
+      "y": 0,
+      "w": 928,
+      "h": 416
+    },
+    "fish_frame": {
+      "x": 778,
+      "y": 42,
+      "w": 289,
+      "h": 284
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0077.png": {
+    "notification": {
+      "x": 707,
+      "y": 0,
+      "w": 914,
+      "h": 439
+    },
+    "fish_frame": {
+      "x": 788,
+      "y": 52,
+      "w": 290,
+      "h": 291
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0078.png": {
+    "notification": {
+      "x": 686,
+      "y": 0,
+      "w": 954,
+      "h": 419
+    },
+    "fish_frame": {
+      "x": 773,
+      "y": 22,
+      "w": 292,
+      "h": 307
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0079.png": {
+    "notification": {
+      "x": 690,
+      "y": 5,
+      "w": 956,
+      "h": 390
+    },
+    "fish_frame": null,
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0088.png": {
+    "notification": {
+      "x": 658,
+      "y": 0,
+      "w": 1017,
+      "h": 377
+    },
+    "fish_frame": {
+      "x": 746,
+      "y": 10,
+      "w": 315,
+      "h": 263
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0089.png": {
+    "notification": {
+      "x": 651,
+      "y": 0,
+      "w": 1008,
+      "h": 388
+    },
+    "fish_frame": {
+      "x": 750,
+      "y": 2,
+      "w": 309,
+      "h": 279
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "IMG_0090.png": {
+    "notification": {
+      "x": 650,
+      "y": 0,
+      "w": 1011,
+      "h": 398
+    },
+    "fish_frame": {
+      "x": 742,
+      "y": 10,
+      "w": 316,
+      "h": 271
+    },
+    "img_w": 2360,
+    "img_h": 1640
+  },
+  "which_fish.png": {
+    "notification": {
+      "x": 462,
+      "y": 0,
+      "w": 652,
+      "h": 330
+    },
+    "fish_frame": {
+      "x": 519,
+      "y": 39,
+      "w": 204,
+      "h": 207
+    },
+    "img_w": 1600,
+    "img_h": 1200
+  }
+}

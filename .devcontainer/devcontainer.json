@@ -53,6 +53,7 @@
   // No volume mounts needed — VSCode bind-mounts the entire workspace folder by default.
   // models/, datasets/, .cache/ are regular project directories visible from both host and container.
 
+  "shutdownAction": "none",
   "workspaceFolder": "/workspaces/stardew-vision-training",
   "remoteUser": "stpousty-devcontainer",
 

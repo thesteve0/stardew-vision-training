@@ -61,7 +61,7 @@ def match_fish_sprite(
 
     Steps:
         1. Strip the wooden frame border (inner crop using frame_margin)
-        2. Scale each of the 83 fish sprites up at multiple integer factors
+        2. Scale each fish sprite up at multiple integer factors
         3. Run cv2.matchTemplate (TM_CCOEFF_NORMED) for each
         4. Return the best match above threshold, with fish name from manifest
 
@@ -74,11 +74,11 @@ def match_fish_sprite(
     scale_range:
         (min_scale, max_scale) integer range for nearest-neighbor upscaling.
     match_threshold:
-        Minimum match score (0.0–1.0) to accept a result.
+        Minimum match score (0.0-1.0) to accept a result.
 
     Returns
     -------
-    dict with keys: fish_name, sprite_index, match_score.
+    dict with keys: fish_name, item_id, match_score.
     fish_name is None if no match above threshold.
     """
     # Strip the wooden frame
@@ -95,12 +95,12 @@ def match_fish_sprite(
     fish_names = load_manifest_fish()
 
     best_score = -1.0
-    best_index = -1
+    best_id = None
     best_scale = -1
 
     inner_h, inner_w = inner.shape[:2]
 
-    for sprite_index, sprite_rgba in fish_sprites.items():
+    for item_id, sprite_rgba in fish_sprites.items():
         # Composite RGBA sprite onto white background for matching
         if sprite_rgba.shape[2] == 4:
             alpha = sprite_rgba[:, :, 3:4].astype(np.float32) / 255.0
@@ -124,19 +124,19 @@ def match_fish_sprite(
 
             if max_val > best_score:
                 best_score = max_val
-                best_index = sprite_index
+                best_id = item_id
                 best_scale = scale
 
     if best_score < match_threshold:
         return {
             "fish_name": None,
-            "sprite_index": None,
+            "item_id": None,
             "match_score": round(float(best_score), 4),
         }
 
     return {
-        "fish_name": fish_names.get(best_index, f"Unknown (sprite_{best_index})"),
-        "sprite_index": best_index,
+        "fish_name": fish_names.get(best_id, f"Unknown ({best_id})"),
+        "item_id": best_id,
         "match_score": round(float(best_score), 4),
     }
 

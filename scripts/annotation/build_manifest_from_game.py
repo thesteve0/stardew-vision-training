@@ -3,7 +3,8 @@
 Build the item manifest from the actual game data (SMAPI export).
 
 This script processes the Data/Objects.json file exported by SMAPI and
-extracts individual sprites from springobjects.png using the SpriteIndex field.
+extracts individual sprites from springobjects.png (and Objects_2.png for
+v1.6+ items) using the SpriteIndex and Texture fields.
 """
 
 import json
@@ -16,19 +17,20 @@ def build_manifest_from_game(
     sprite_sheet_path: Path,
     output_manifest_path: Path,
     output_sprites_dir: Path,
+    extra_sheets: dict[str, Path] | None = None,
     sprite_size: int = 16,
-    sheet_columns: int = 24
 ):
     """
     Build item manifest and extract sprites from game data.
 
     Args:
         objects_json_path: Path to Data_Objects.json (SMAPI export)
-        sprite_sheet_path: Path to springobjects.png
+        sprite_sheet_path: Path to springobjects.png (default sheet)
         output_manifest_path: Path to save item_manifest.json
         output_sprites_dir: Directory to save individual sprites
-        sprite_size: Size of each sprite (16×16)
-        sheet_columns: Number of columns in sprite sheet (24)
+        extra_sheets: Mapping of Texture name to PNG path for non-default
+            sprite sheets (e.g. {"TileSheets\\Objects_2": Path("Objects_2.png")})
+        sprite_size: Size of each sprite (16x16)
     """
     # Load the Objects data
     print(f"Loading Objects data from: {objects_json_path}")
@@ -37,10 +39,22 @@ def build_manifest_from_game(
 
     print(f"✓ Loaded {len(objects_data)} items")
 
-    # Load the sprite sheet
-    print(f"Loading sprite sheet from: {sprite_sheet_path}")
-    sprite_sheet = Image.open(sprite_sheet_path)
-    print(f"✓ Sprite sheet: {sprite_sheet.size[0]}×{sprite_sheet.size[1]} pixels")
+    # Load sprite sheets
+    sheets: dict[str | None, tuple[Image.Image, int]] = {}
+
+    print(f"Loading default sprite sheet from: {sprite_sheet_path}")
+    default_sheet = Image.open(sprite_sheet_path)
+    default_cols = default_sheet.size[0] // sprite_size
+    sheets[None] = (default_sheet, default_cols)
+    print(f"✓ Default sheet: {default_sheet.size[0]}x{default_sheet.size[1]} pixels ({default_cols} columns)")
+
+    if extra_sheets:
+        for texture_name, sheet_path in extra_sheets.items():
+            print(f"Loading extra sheet '{texture_name}' from: {sheet_path}")
+            sheet_img = Image.open(sheet_path)
+            sheet_cols = sheet_img.size[0] // sprite_size
+            sheets[texture_name] = (sheet_img, sheet_cols)
+            print(f"✓ {texture_name}: {sheet_img.size[0]}x{sheet_img.size[1]} pixels ({sheet_cols} columns)")
 
     # Create output directory
     output_sprites_dir.mkdir(parents=True, exist_ok=True)
@@ -65,6 +79,15 @@ def build_manifest_from_game(
         item_type = item_data.get('Type', 'Unknown')
         category_num = item_data.get('Category', -999)
         description = item_data.get('Description', '')
+
+        # Select the correct sprite sheet based on the Texture field
+        texture = item_data.get('Texture', None)
+        if texture and texture not in sheets:
+            print(f"Warning: Item {item_id} uses texture '{texture}' which was not provided, skipping")
+            skipped_count += 1
+            continue
+
+        sprite_sheet, sheet_columns = sheets.get(texture, sheets[None])
 
         # Calculate sprite position in the sheet
         row = sprite_index // sheet_columns
@@ -135,6 +158,12 @@ def main():
         help='Path to springobjects.png'
     )
     parser.add_argument(
+        '--objects2-sheet',
+        type=Path,
+        default=Path('datasets/assets/game_files/Objects_2.png'),
+        help='Path to Objects_2.png (v1.6+ items)'
+    )
+    parser.add_argument(
         '--manifest',
         type=Path,
         default=Path('datasets/assets/item_manifest_game.json'),
@@ -148,11 +177,20 @@ def main():
     )
 
     args = parser.parse_args()
+
+    extra_sheets = {}
+    if args.objects2_sheet.exists():
+        extra_sheets["TileSheets\\Objects_2"] = args.objects2_sheet
+    else:
+        print(f"Warning: Objects_2 sheet not found at {args.objects2_sheet}, "
+              "v1.6 items will be skipped")
+
     build_manifest_from_game(
         args.objects,
         args.sheet,
         args.manifest,
-        args.sprites
+        args.sprites,
+        extra_sheets=extra_sheets or None,
     )
 
 
