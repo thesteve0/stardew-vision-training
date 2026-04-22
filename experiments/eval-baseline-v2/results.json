@@ -1,0 +1,65 @@
+{
+  "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+  "model_type": "baseline",
+  "seed": 42,
+  "num_samples": 100,
+  "evaluated_at": "2026-04-22T21:35:47.747366+00:00",
+  "prompt_version": "v2-vllm-matching",
+  "prompt_notes": "Tool injection format matches the production vLLM chat template (qwen2_5_vl_tool_template.jinja). Includes 'You may call one or more functions to assist with the user query.' header. Lower baseline than v1 because the untuned model treats tool calling as optional without vLLM's tool_choice=auto bias.",
+  "overall_accuracy": 0.55,
+  "macro_f1": 0.5945683111954458,
+  "per_class": {
+    "tv_dialog": {
+      "count": 25,
+      "correct": 20,
+      "accuracy": 0.8,
+      "precision": 0.8,
+      "recall": 0.8,
+      "f1": 0.8
+    },
+    "caught_fish": {
+      "count": 25,
+      "correct": 6,
+      "accuracy": 0.24,
+      "precision": 1.0,
+      "recall": 0.24,
+      "f1": 0.3870967741935484
+    },
+    "pierre_shop": {
+      "count": 25,
+      "correct": 24,
+      "accuracy": 0.96,
+      "precision": 0.9230769230769231,
+      "recall": 0.96,
+      "f1": 0.9411764705882353
+    },
+    "no_tools": {
+      "count": 25,
+      "correct": 5,
+      "accuracy": 0.2,
+      "precision": 0.3333333333333333,
+      "recall": 0.2,
+      "f1": 0.25
+    }
+  },
+  "confusion_matrix": [
+    [20, 0, 0, 0, 5],
+    [0, 6, 0, 10, 9],
+    [0, 0, 24, 0, 1],
+    [5, 0, 2, 5, 13],
+    [0, 0, 0, 0, 0]
+  ],
+  "confusion_labels": ["tv_dialog", "caught_fish", "pierre_shop", "no_tools", "unknown"],
+  "comparison_to_v1": {
+    "v1_overall_accuracy": 0.7,
+    "v2_overall_accuracy": 0.55,
+    "delta": -0.15,
+    "reason": "v2 uses production-matching prompt format. The 'You may call...' phrasing causes the untuned model to sometimes describe images instead of calling tools. In production, vLLM's tool_choice=auto compensates for this. Fine-tuning will teach the model to consistently use tool calls with this prompt.",
+    "per_class_delta": {
+      "tv_dialog": {"v1": 0.92, "v2": 0.8, "delta": -0.12},
+      "caught_fish": {"v1": 0.52, "v2": 0.24, "delta": -0.28},
+      "pierre_shop": {"v1": 1.0, "v2": 0.96, "delta": -0.04},
+      "no_tools": {"v1": 0.36, "v2": 0.2, "delta": -0.16}
+    }
+  }
+}

@@ -65,12 +65,19 @@ NO_TOOL_RESPONSE = "I don't have a tool to handle that screen"
 
 _TOOLS_JSON = "\n".join(json.dumps(t) for t in TOOL_DEFINITIONS)
 
-SYSTEM_PROMPT = (
+# Task-specific instructions (separate from tool injection, which matches vLLM template)
+_TASK_PROMPT = (
     "You are a Stardew Valley accessibility assistant. "
     "Analyze the screenshot and call the appropriate extraction tool. "
     "If no extraction tool matches the screen, respond with exactly: "
     f'"{NO_TOOL_RESPONSE}"'
+)
+
+# Tool injection text — matches the vLLM chat template (qwen2_5_vl_tool_template.jinja)
+# exactly so training and production see identical token sequences.
+_TOOL_INJECTION = (
     "\n\n# Tools\n\n"
+    "You may call one or more functions to assist with the user query.\n\n"
     "You are provided with function signatures within <tools></tools> XML tags:\n"
     "<tools>\n"
     f"{_TOOLS_JSON}\n"
@@ -79,9 +86,14 @@ SYSTEM_PROMPT = (
     "arguments within <tool_call></tool_call> XML tags:\n"
     "<tool_call>\n"
     '{"name": <function-name>, "arguments": <args-json-object>}\n'
-    "</tool_call>\n\n"
-    "If no tool matches the screen, respond with only: "
-    f"{NO_TOOL_RESPONSE}"
+    "</tool_call>"
+)
+
+SYSTEM_PROMPT = (
+    _TASK_PROMPT
+    + _TOOL_INJECTION
+    + "\n\nIf no tool matches the screen, respond with only: "
+    + NO_TOOL_RESPONSE
 )
 
 
