@@ -124,19 +124,42 @@ python scripts/upload_to_hub.py \
 
 ---
 
+## Baseline Evaluation Results
+
+Baseline evaluation of the untuned Qwen2.5-VL-7B-Instruct model on tool selection accuracy (100 images, 25 per screen type):
+
+| Screen Type  | Count | Correct | Accuracy |
+|-------------|-------|---------|----------|
+| tv_dialog   | 25    | 23      | 92.0%    |
+| caught_fish | 25    | 13      | 52.0%    |
+| pierre_shop | 25    | 25      | 100.0%   |
+| no_tools    | 25    | 9       | 36.0%    |
+| **Overall** | **100** | **70** | **70.0%** |
+
+**Macro F1: 69.7%**
+
+Results saved to:
+- `experiments/eval-baseline-v1/results.json` — aggregate metrics
+- `experiments/eval-baseline-v1/sample_outputs.jsonl` — per-sample predictions and raw model output
+- MLflow experiment `qwen-tool-selection-eval`, run `baseline`
+
+The fixed evaluation set (never use for training): `datasets/eval_set.json`
+
+---
+
 ## Current Status
 
 **Phase 2 Focus**: tv_dialog + caught_fish
 
-- **tv_dialog**: 1/15 screenshots collected
-- **caught_fish**: 1/15 screenshots collected
-- **pierre_shop**: Baseline dataset complete (8 examples)
+- **tv_dialog**: 45 screenshots collected
+- **caught_fish**: 33 screenshots collected
+- **pierre_shop**: 26 screenshots collected
+- **no_tools**: 173 screenshots collected
 
 **Next Steps**:
-1. Collect 15-20 screenshots for tv_dialog and caught_fish
-2. Build extraction tools (`crop_tv_dialog`, `crop_caught_fish_notification`)
-3. Generate synthetic training data (15 real → 150 synthetic per type)
-4. Fine-tune Qwen on pierre_shop + tv_dialog + caught_fish (~450 examples)
+1. Generate synthetic training data (real → synthetic variations per type)
+2. Fine-tune Qwen on pierre_shop + tv_dialog + caught_fish + no_tools
+3. Re-evaluate against baseline using `datasets/eval_set.json`
 
 ---
 
