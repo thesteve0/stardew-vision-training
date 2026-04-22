@@ -1,0 +1,7 @@
+- [Synthetic screenshot approach](feedback_synthetic_screenshots.md) — clean backgrounds + on-the-fly overlay, not in-place text replacement; annotation-based positioning
+- [Evaluation phases](project_eval_phases.md) — Phase 1 = tool selection accuracy, Phase 2 = text correction; train and eval follow same phasing
+- [EvalHub references](reference_evalhub.md) — Red Hat AI eval platform; standalone first, optional BYOF wrapper later
+- [Distributed training plan](project_distributed_training_plan.md) — Ray local → KubeRay → Kubeflow on OpenShift AI; S3 for data, MLflow on cluster, model serving TBD
+- [Cluster hardware and ops](project_cluster_hardware.md) — 2-3 Nvidia L40S GPUs on OpenShift; James Harmison deploying MLflow
+- [Dual machine setup](user_dual_machine.md) — Desktop + laptop both AMD ROCm, syncs via git push/pull
+- [Commit after steps](feedback_commit_after_steps.md) — Ask about git commit+push after each plan step

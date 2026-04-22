@@ -224,8 +224,47 @@ else
     echo "Warning: Neither amd-smi nor rocm-smi found in PATH"
 fi
 
+# ==============================================================================
+# --- Claude Code portability ---
+# All Claude Code state for this project lives in the workspace .claude/ directory
+# (git-tracked). Create symlinks so Claude Code finds it at the expected paths.
+# ==============================================================================
+
+echo ""
+echo "Setting up Claude Code symlinks..."
+
+WORKSPACE_CLAUDE="${WORKSPACE_DIR}/.claude"
+USER_CLAUDE="/home/stpousty-devcontainer/.claude"
+PROJECT_SLUG="-workspaces-stardew-vision-training"
+
+# Memory: symlink per-project memory to workspace
+mkdir -p "$USER_CLAUDE/projects/$PROJECT_SLUG"
+if [ ! -L "$USER_CLAUDE/projects/$PROJECT_SLUG/memory" ]; then
+    rm -rf "$USER_CLAUDE/projects/$PROJECT_SLUG/memory"
+    ln -sfn "$WORKSPACE_CLAUDE/memory" "$USER_CLAUDE/projects/$PROJECT_SLUG/memory"
+    echo "✓ Memory symlinked to workspace .claude/memory/"
+else
+    echo "✓ Memory symlink already exists"
+fi
+
+# Plans: symlink plans directory to workspace
+if [ ! -L "$USER_CLAUDE/plans" ]; then
+    rm -rf "$USER_CLAUDE/plans"
+    ln -sfn "$WORKSPACE_CLAUDE/plans" "$USER_CLAUDE/plans"
+    echo "✓ Plans symlinked to workspace .claude/plans/"
+else
+    echo "✓ Plans symlink already exists"
+fi
+
+# Settings: copy workspace settings.json as the global default
+if [ -f "$WORKSPACE_CLAUDE/settings.json" ]; then
+    cp "$WORKSPACE_CLAUDE/settings.json" "$USER_CLAUDE/settings.json"
+    echo "✓ Global settings copied from workspace"
+fi
+
 echo ""
 echo "Setup complete!"
 echo "  - .venv created with .pth bridge to ROCm packages"
 echo "  - ROCm packages protected in pyproject.toml"
+echo "  - Claude Code config symlinked to workspace .claude/"
 echo "  - Store models in ./models/ and datasets in ./datasets/ — they persist across rebuilds"

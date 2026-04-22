@@ -1,0 +1,9 @@
+# Track: settings, memory, plans
+# Ignore: ephemeral Claude Code data
+*.jsonl
+paste-cache/
+backups/
+cache/
+sessions/
+shell-snapshots/
+plugins/
