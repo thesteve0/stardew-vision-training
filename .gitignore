@@ -59,6 +59,7 @@ datasets/debug_crops/
 datasets/splits/
 
 # MLFlow
+mlflow.db
 mlruns/
 mlartifacts/
 
