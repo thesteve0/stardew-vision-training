@@ -31,7 +31,19 @@
       "WebFetch(domain:developers.redhat.com)",
       "WebFetch(domain:timc.me)",
       "WebFetch(domain:pypi.org)",
-      "WebFetch(domain:ai-innovation.team)"
+      "WebFetch(domain:ai-innovation.team)",
+      "WebFetch(domain:eval-hub.github.io)",
+      "Bash(uv pip *)",
+      "Bash(uv search *)",
+      "Bash(python -c \"import evalhub\")",
+      "WebFetch(domain:api.github.com)",
+      "Bash(gh search *)",
+      "Bash(gh auth *)",
+      "WebFetch(domain:qwen.readthedocs.io)",
+      "WebFetch(domain:docs.vllm.ai)",
+      "Bash(rocm-smi --showmemuse --showuse --csv)",
+      "Bash(sqlite3 /workspaces/stardew-vision-training/mlflow.db \"SELECT experiment_id, name FROM experiments;\")",
+      "Bash(sqlite3 /workspaces/stardew-vision-training/mlflow.db \"SELECT run_uuid, name, status FROM runs;\")"
     ]
   }
 }

@@ -29,6 +29,7 @@ dependencies = [
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
     "sdg-hub",
+    "scikit-learn>=1.8.0",
 ]
 
 [project.optional-dependencies]
