@@ -50,10 +50,12 @@ def load_test_set(datasets_dir: str = "datasets") -> list[TestSample]:
             missing_images.append(image_path)
             continue
 
+        screen_type = record["screen_type"]
+        expected_tool = record.get("expected_tool", SCREEN_TYPE_TO_TOOL.get(screen_type))
         samples.append(TestSample(
             image_path=image_path,
-            screen_type=record["screen_type"],
-            expected_tool=record["expected_tool"],
+            screen_type=screen_type,
+            expected_tool=expected_tool,
         ))
 
     if missing_images:

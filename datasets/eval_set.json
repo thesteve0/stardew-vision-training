@@ -501,102 +501,127 @@
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0284.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0294.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0304.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0314.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0327.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0337.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0347.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0357.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0367.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0377.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0388.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0398.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0408.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0418.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0428.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0438.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0448.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0458.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0468.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0478.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0488.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0498.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0508.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0518.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   },
   {
     "image_path": "datasets/no_tools/images/IMG_0528.PNG",
-    "screen_type": "no_tools"
+    "screen_type": "no_tools",
+    "expected_tool": null
   }
 ]
