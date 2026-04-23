@@ -117,9 +117,9 @@ python scripts/upload_to_hub.py \
 
 ## Evaluation Results
 
-All evaluations use the held-out set of 100 images from `datasets/eval_set.json` (never used in training).
+All evaluations use the held-out eval set from `datasets/eval_set.json` (125 images, never used in training).
 
-**Baseline (untuned)**: 70% overall accuracy, 69.7% macro F1. See [detailed comparison of all runs](docs/comparison-small-training-runs.md) including baseline variants and fine-tuned tiny runs (standalone + Ray Train).
+**Best result**: 97.6% overall accuracy, 97.7% macro F1 (LoRA fine-tuned, 3 epochs, 775 samples, ~4h 40m on single AMD ROCm GPU). See [detailed comparison of all runs](docs/comparison-small-training-runs.md).
 
 ---
 

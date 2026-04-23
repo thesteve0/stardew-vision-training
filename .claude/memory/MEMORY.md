@@ -1,7 +1,9 @@
 - [Synthetic screenshot approach](feedback_synthetic_screenshots.md) — clean backgrounds + on-the-fly overlay, not in-place text replacement; annotation-based positioning
-- [Evaluation phases](project_eval_phases.md) — Phase 1 = tool selection accuracy, Phase 2 = text correction; train and eval follow same phasing
+- [Evaluation phases](project_eval_phases.md) — Phase 1 (tool selection) complete at 97.6%; Phase 2 (text correction) next after cluster deploy
 - [EvalHub references](reference_evalhub.md) — Red Hat AI eval platform; standalone first, optional BYOF wrapper later
-- [Distributed training plan](project_distributed_training_plan.md) — Ray local → KubeRay → Kubeflow on OpenShift AI; S3 for data, MLflow on cluster, model serving TBD
+- [Distributed training plan](project_distributed_training_plan.md) — Ray Train done locally; KubeRay on OpenShift AI is next; deploy/rayjob.yaml ready with placeholders
 - [Cluster hardware and ops](project_cluster_hardware.md) — 2-3 Nvidia L40S GPUs on OpenShift; James Harmison deploying MLflow
 - [Dual machine setup](user_dual_machine.md) — Desktop + laptop both AMD ROCm, syncs via git push/pull
 - [Commit after steps](feedback_commit_after_steps.md) — Ask about git commit+push after each plan step
+- [Training results and data balance](project_training_results.md) — 97.6% accuracy; no_tools 2:1 ratio validated; 2 epochs optimal; val loss overfits at epoch 3
+- [Never use pip](feedback_no_pip.md) — Always uv add/sync; pip overwrites ROCm packages

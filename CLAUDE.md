@@ -71,7 +71,13 @@ stardew-vision-training/
 - `data_prep.py` splits tool-calling classes at 85/15 train/val, then caps no_tools training at 2:1 ratio vs average tool class, with overflow going to validation (see split strategy below)
 - Phase 1 focus: tool selection (screen → correct tool call or "no tool" refusal)
 
-**Current task**: Ray Train integration validated, ready for full training runs
+**Current task**: Full training complete (97.6% eval accuracy). Next: deploy to KubeRay on OpenShift AI 3.3
+
+**Training results** (full 3-epoch run, single AMD ROCm GPU via Ray Train):
+- 97.6% overall accuracy, 97.7% macro F1 on 125-image eval set
+- 291 steps, ~4h 40m wall time, ~48s/step steady state
+- Val loss bottomed at epoch 2 (0.0038), mild overfit at epoch 3 (0.0044) — 2 epochs may be optimal
+- See `docs/comparison-small-training-runs.md` for full comparison across all runs
 
 ---
 
@@ -161,13 +167,33 @@ This reads both `datasets/synthetic/*/conversations.jsonl` and `datasets/*/annot
 
 ### 5. Fine-Tuning
 
+**Standalone** (single GPU, no Ray):
 ```bash
 python fine_tuning/qwen/train.py \
-  --config fine_tuning/qwen/lora_config.yaml \
-  --output-dir experiments/qwen-tv-fish-v1
+  --config fine_tuning/qwen/lora_config.yaml
 ```
 
-Uses LoRA (rank=16, alpha=32) via PEFT. Checkpoints saved to experiments/.
+**Ray Train** (local single GPU or multi-GPU on KubeRay):
+```bash
+# Local single-GPU
+python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config.yaml
+
+# Dry run (2 steps, verify pipeline)
+python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_tiny.yaml --dry-run
+
+# Multi-GPU on KubeRay (submitted via deploy/rayjob.yaml)
+python fine_tuning/qwen/train_ray.py \
+  --config fine_tuning/qwen/lora_config_cluster.yaml \
+  --num-workers 2 \
+  --storage-path s3://bucket/ray-results/
+```
+
+Uses LoRA (rank=16, alpha=32) via PEFT. Ray checkpoints saved to `~/ray_results/`. Standalone checkpoints saved to `experiments/`.
+
+**Timing reference** (single AMD ROCm GPU, 775 samples):
+- ~48s/step steady state, ~250s first step (torch.compile)
+- 3 epochs / 291 steps: ~4h 40m total
+- Eval pass (146 val samples): ~7 min
 
 ### 6. Evaluation
 
