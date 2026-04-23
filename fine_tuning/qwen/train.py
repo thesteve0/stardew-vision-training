@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import tempfile
+import time
 from pathlib import Path
 
 import mlflow
@@ -216,14 +217,33 @@ def main():
 
         # Train
         logger.info("Starting training%s", " (dry run)" if args.dry_run else "")
+        t_train_start = time.time()
         trainer.train()
+        train_duration = time.time() - t_train_start
+
+        train_result = trainer.state
+        steps = train_result.global_step
+        epochs_completed = train_result.epoch or 0
+        logger.info(
+            "Training finished: %d steps, %.1f epochs in %.1f min (%.1f s/step)",
+            steps, epochs_completed, train_duration / 60,
+            train_duration / max(steps, 1),
+        )
 
         if not args.dry_run:
             logger.info("Saving model to %s", output_dir)
             trainer.save_model(output_dir)
             processor.save_pretrained(output_dir)
 
+            t_eval_start = time.time()
             metrics = trainer.evaluate()
+            eval_duration = time.time() - t_eval_start
+            logger.info("Evaluation finished in %.1f min", eval_duration / 60)
+
+            metrics["train_wall_time_min"] = round(train_duration / 60, 1)
+            metrics["eval_wall_time_min"] = round(eval_duration / 60, 1)
+            metrics["total_wall_time_min"] = round((train_duration + eval_duration) / 60, 1)
+            metrics["seconds_per_step"] = round(train_duration / max(steps, 1), 1)
             mlflow.log_metrics(metrics)
 
         logger.info("Training complete!")

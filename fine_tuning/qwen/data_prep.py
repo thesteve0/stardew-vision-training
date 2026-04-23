@@ -37,6 +37,7 @@ TOOL_FOR_SCREEN = {
 TINY_PER_CLASS = 10
 SEED = 42
 VAL_FRACTION = 0.15
+NO_TOOLS_TRAIN_RATIO = 2.0  # no_tools train examples per tool-class train average
 
 
 def load_eval_image_paths(eval_set_path: Path) -> set[str]:
@@ -219,14 +220,35 @@ def main():
     examples = load_and_transform(args.synthetic_dir, args.datasets_dir, eval_images)
     random.shuffle(examples)
 
-    split_idx = int(len(examples) * (1 - args.val_fraction))
-    train = examples[:split_idx]
-    val = examples[split_idx:]
+    # Split tool-calling classes at the standard ratio, then cap no_tools
+    # training at NO_TOOLS_TRAIN_RATIO:1 vs the average tool class, with
+    # overflow going to validation.
+    tool_examples = [ex for ex in examples if ex["metadata"]["screen_type"] != "no_tools"]
+    no_tools_examples = [ex for ex in examples if ex["metadata"]["screen_type"] == "no_tools"]
 
-    logger.info("Split: %d train, %d val (%.0f%%/%.0f%%)",
-                len(train), len(val),
-                100 * len(train) / len(examples),
-                100 * len(val) / len(examples))
+    tool_split_idx = int(len(tool_examples) * (1 - args.val_fraction))
+    tool_train = tool_examples[:tool_split_idx]
+    tool_val = tool_examples[tool_split_idx:]
+
+    # Calculate no_tools train target: 2:1 vs average tool class in train
+    tool_class_counts = {}
+    for ex in tool_train:
+        st = ex["metadata"]["screen_type"]
+        tool_class_counts[st] = tool_class_counts.get(st, 0) + 1
+    avg_tool_train = sum(tool_class_counts.values()) / max(len(tool_class_counts), 1)
+    no_tools_train_target = int(NO_TOOLS_TRAIN_RATIO * avg_tool_train)
+
+    no_tools_train = no_tools_examples[:no_tools_train_target]
+    no_tools_val = no_tools_examples[no_tools_train_target:]
+
+    train = tool_train + no_tools_train
+    val = tool_val + no_tools_val
+    random.shuffle(train)
+    random.shuffle(val)
+
+    logger.info("Tool class train avg: %.0f, no_tools train target (%.0f:1): %d",
+                avg_tool_train, NO_TOOLS_TRAIN_RATIO, no_tools_train_target)
+    logger.info("Split: %d train, %d val", len(train), len(val))
 
     tiny = make_tiny_split(train, args.tiny_per_class)
 

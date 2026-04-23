@@ -49,7 +49,12 @@
       "Bash(python3 -m json.tool)",
       "Bash(xxd /workspaces/stardew-vision-training/datasets/eval_set.json)",
       "Bash(sort md5sum *)",
-      "Bash(sort -u echo \"Real unique images: $\\(wc -l < /tmp/real_md5s.txt\\)\" echo \"Synthetic unique images: $\\(wc -l < /tmp/synth_md5s.txt\\)\" echo \"Overlapping hashes: $\\(comm -12 /tmp/real_md5s.txt /tmp/synth_md5s.txt)"
+      "Bash(sort -u echo \"Real unique images: $\\(wc -l < /tmp/real_md5s.txt\\)\" echo \"Synthetic unique images: $\\(wc -l < /tmp/synth_md5s.txt\\)\" echo \"Overlapping hashes: $\\(comm -12 /tmp/real_md5s.txt /tmp/synth_md5s.txt)",
+      "WebFetch(domain:docs.ray.io)",
+      "Bash(python3 -c \" from ray.train import CheckpointConfig help\\(CheckpointConfig.__init__\\) \")",
+      "Bash(python3 -c \" import ray.train.huggingface.transformers as rht import inspect print\\(inspect.getsource\\(rht.RayTrainReportCallback\\)\\) \")",
+      "Bash(python3 -c \" import ray.train.huggingface.transformers as rht import inspect print\\(inspect.getsource\\(rht.prepare_trainer\\)\\) \")",
+      "Bash(python3 -c \" from ray.train import FailureConfig help\\(FailureConfig.__init__\\) \")"
     ]
   }
 }

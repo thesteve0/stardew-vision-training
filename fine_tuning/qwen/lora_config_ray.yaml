@@ -1,0 +1,58 @@
+# LoRA Fine-Tuning Configuration for Ray Train (Local, AMD ROCm)
+# Same hyperparameters as lora_config.yaml, used with train_ray.py
+#
+# Usage:
+#   python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_ray.yaml
+#   python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_ray.yaml --dry-run
+
+model_name: "Qwen/Qwen2.5-VL-7B-Instruct"
+torch_dtype: "float16"  # REQUIRED for ROCm gfx1151 — no BF16 support
+
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+  bias: "none"
+  task_type: "CAUSAL_LM"
+
+training:
+  output_dir: "experiments/qwen-tool-select-ray-v1"
+  num_train_epochs: 3
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 1
+  gradient_accumulation_steps: 4      # effective batch = 8 (1 worker)
+  learning_rate: 1.0e-4
+  warmup_steps: 50
+  logging_steps: 10
+  save_steps: 100
+  eval_steps: 100
+  eval_strategy: "steps"
+  save_strategy: "steps"
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+  fp16: true
+  bf16: false
+  dataloader_num_workers: 4
+  gradient_checkpointing: true
+  optim: "adamw_torch"
+  lr_scheduler_type: "cosine"
+  max_grad_norm: 1.0
+  report_to: "mlflow"
+
+data:
+  train_file: "datasets/splits/train.jsonl"
+  eval_file: "datasets/splits/val.jsonl"
+
+mlflow:
+  experiment_name: "qwen-tool-selection-train"
+  tracking_uri: "experiments/mlruns"
+  run_name: "tool-select-ray-v1"
+
+seed: 42

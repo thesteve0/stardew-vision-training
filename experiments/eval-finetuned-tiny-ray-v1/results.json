@@ -1,0 +1,87 @@
+{
+  "model": "/home/stpousty-devcontainer/ray_results/stardew-vision-lora-train/checkpoint_2026-04-23_04-38-03.933595/checkpoint",
+  "model_type": "finetuned",
+  "seed": 42,
+  "num_samples": 100,
+  "evaluated_at": "2026-04-23T04:58:04.812678+00:00",
+  "overall_accuracy": 0.71,
+  "macro_f1": 0.620625207009132,
+  "per_class": {
+    "tv_dialog": {
+      "count": 25,
+      "correct": 24,
+      "accuracy": 0.96,
+      "precision": 0.75,
+      "recall": 0.96,
+      "f1": 0.8421052631578947
+    },
+    "caught_fish": {
+      "count": 25,
+      "correct": 22,
+      "accuracy": 0.88,
+      "precision": 1.0,
+      "recall": 0.88,
+      "f1": 0.9361702127659575
+    },
+    "pierre_shop": {
+      "count": 25,
+      "correct": 25,
+      "accuracy": 1.0,
+      "precision": 0.5434782608695652,
+      "recall": 1.0,
+      "f1": 0.704225352112676
+    },
+    "no_tools": {
+      "count": 25,
+      "correct": 0,
+      "accuracy": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      24,
+      0,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      22,
+      3,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      25,
+      0,
+      0
+    ],
+    [
+      8,
+      0,
+      17,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "confusion_labels": [
+    "tv_dialog",
+    "caught_fish",
+    "pierre_shop",
+    "no_tools",
+    "unknown"
+  ]
+}

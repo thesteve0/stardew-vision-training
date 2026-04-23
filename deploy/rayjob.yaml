@@ -1,0 +1,88 @@
+# KubeRay RayJob for Stardew Vision LoRA fine-tuning on OpenShift AI
+#
+# Prerequisites:
+#   1. KubeRay operator installed on the cluster
+#   2. Kubernetes secrets created:
+#      - s3-credentials: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION
+#      - mlflow-credentials: MLFLOW_TRACKING_URI, MLFLOW_TRACKING_TOKEN (if auth required)
+#   3. Training data uploaded to S3 (datasets/splits/*.jsonl + datasets/*/images/)
+#   4. Container image available with project dependencies
+#
+# Usage:
+#   kubectl apply -f deploy/rayjob.yaml
+#   kubectl logs -f job/stardew-lora-train  # follow driver logs
+#
+# Placeholder values marked with CHANGEME must be updated before use.
+
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: stardew-lora-train
+  namespace: stardew-vision  # CHANGEME
+spec:
+  entrypoint: >-
+    python fine_tuning/qwen/train_ray.py
+    --config fine_tuning/qwen/lora_config_cluster.yaml
+    --num-workers 2
+    --storage-path s3://CHANGEME/ray-results/
+
+  runtimeEnvYAML: |
+    working_dir: "s3://CHANGEME/training-code/stardew-vision-training.zip"
+    env_vars:
+      NCCL_DEBUG: "INFO"
+
+  shutdownAfterJobFinishes: true
+  ttlSecondsAfterFinished: 3600
+
+  rayClusterSpec:
+    headGroupSpec:
+      rayStartParams:
+        dashboard-host: "0.0.0.0"
+      template:
+        spec:
+          containers:
+            - name: ray-head
+              image: quay.io/opendatahub/odh-pipeline-runtime-pytorch-cuda-py312-ubi9  # CHANGEME if needed
+              resources:
+                requests:
+                  cpu: "2"
+                  memory: "8Gi"
+                limits:
+                  cpu: "4"
+                  memory: "8Gi"
+              envFrom:
+                - secretRef:
+                    name: s3-credentials
+                - secretRef:
+                    name: mlflow-credentials
+
+    workerGroupSpecs:
+      - replicas: 2
+        minReplicas: 2
+        maxReplicas: 2
+        groupName: gpu-workers
+        rayStartParams:
+          num-gpus: "1"
+        template:
+          spec:
+            containers:
+              - name: ray-worker
+                image: quay.io/opendatahub/odh-pipeline-runtime-pytorch-cuda-py312-ubi9  # CHANGEME if needed
+                resources:
+                  requests:
+                    cpu: "4"
+                    memory: "32Gi"
+                    nvidia.com/gpu: 1
+                  limits:
+                    cpu: "8"
+                    memory: "48Gi"
+                    nvidia.com/gpu: 1
+                envFrom:
+                  - secretRef:
+                      name: s3-credentials
+                  - secretRef:
+                      name: mlflow-credentials
+            tolerations:
+              - key: nvidia.com/gpu
+                operator: Exists
+                effect: NoSchedule

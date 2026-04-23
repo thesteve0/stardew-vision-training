@@ -1,3 +1,5 @@
+**NEVER use `pip install`. ALWAYS use `uv add` to add packages and `uv sync` to install. pip silently overwrites ROCm-provided packages.**
+
 # CLAUDE.md — Training Repository Context
 
 This file provides context to Claude Code when working on the training repository.
@@ -57,19 +59,19 @@ stardew-vision-training/
 
 **Screen types being trained** (4 categories):
 1. **caught_fish** — 33 real screenshots, 173 synthetic
-2. **no_tools** — 173 real screenshots, **no synthetic** (negative examples — screens with no applicable tool)
+2. **no_tools** — 423 real screenshots, **no synthetic** (negative examples — screens with no applicable tool)
 3. **pierre_shop** — 26 real screenshots, 173 synthetic
 4. **tv_dialog** — 45 real screenshots, 173 synthetic
 
 **Training strategy**:
 - Real screenshots collected in `datasets/{screen_type}/images/`
 - Synthetic variations generated in `datasets/synthetic/{screen_type}/images/` (tool-calling classes only)
-- **no_tools has no synthetic data** — the visual variation is too broad for compositing. Real screenshots only, sourced from `datasets/no_tools/images/`. Intentionally oversampled at ~2:1 vs each tool class to cover the much larger "no tool needed" image space (supported by Larson et al. 2019, Gorilla/Patil et al. 2023)
-- 100 images reserved in `datasets/eval_set.json` (25 per type) — **NEVER used for training or validation**
-- Remaining real + all synthetic images used for training/validation (85/15 split)
+- **no_tools has no synthetic data** — the visual variation is too broad for compositing. Real screenshots only, sourced from `datasets/no_tools/images/`
+- 125 images reserved in `datasets/eval_set.json` — **NEVER used for training or validation** (see eval set section below)
+- `data_prep.py` splits tool-calling classes at 85/15 train/val, then caps no_tools training at 2:1 ratio vs average tool class, with overflow going to validation (see split strategy below)
 - Phase 1 focus: tool selection (screen → correct tool call or "no tool" refusal)
 
-**Current task**: Training pipeline validated (dry run successful), ready for full training runs
+**Current task**: Ray Train integration validated, ready for full training runs
 
 ---
 
@@ -206,9 +208,15 @@ Exception: `pip install uv` is acceptable only as Dockerfile bootstrap.
 
 **Data sources**: Real screenshots (`datasets/{screen_type}/annotations.jsonl`) and synthetic conversations (`datasets/synthetic/{screen_type}/conversations.jsonl`). The `no_tools` class uses real screenshots only — there is no `datasets/synthetic/no_tools/` directory. Synthetic data is only generated for the three tool-calling classes (caught_fish, pierre_shop, tv_dialog) where text can be composited onto clean backgrounds.
 
-**no_tools class balance**: The no_tools (rejection) class is intentionally oversampled at ~2:1 relative to each tool-calling class. This is because the universe of "no tool needed" screens is orders of magnitude larger than any specific tool screen, so more diverse negatives are needed to learn a robust rejection boundary. Target ~300-340 no_tools images vs ~150-170 per tool class.
+**Eval set** (`datasets/eval_set.json`): 125 images reserved for evaluation — 25 each for caught_fish, pierre_shop, tv_dialog, and 50 for no_tools. The no_tools eval set is larger because it's the hardest class with the widest visual variation, so more eval samples give better statistical power. These must **NEVER** be used in training or validation splits.
 
-**Eval set** (`datasets/eval_set.json`): 100 images (25 per screen type) reserved for evaluation. These must **NEVER** be used in training or validation splits.
+**Split strategy** (`data_prep.py`):
+1. Tool-calling classes (caught_fish, pierre_shop, tv_dialog) are split at 85/15 train/val
+2. no_tools training is capped at `NO_TOOLS_TRAIN_RATIO` (2.0) times the average tool-class training count
+3. Remaining no_tools examples overflow into validation, giving stronger val signal on the rejection class
+4. This produces ~310 no_tools in training (2:1 ratio) and ~63 in validation
+
+**Why 2:1 for no_tools**: The "no tool needed" class covers every game screen that isn't one of 3 specific patterns — the input space is orders of magnitude larger. Research on out-of-scope detection (Larson et al. 2019, EMNLP) and function-calling models (Patil et al. 2023, Gorilla) converge on ~2:1 negative-to-each-positive as the sweet spot. Beyond 3:1 the model starts over-rejecting valid tool calls. This was validated empirically: a tiny training run with balanced 1:1 data collapsed no_tools accuracy to 0%, showing the model needs more negative examples.
 
 **Split generation**: `python fine_tuning/qwen/data_prep.py` reads both real and synthetic data, excludes eval set images, and writes train/val/tiny splits to `datasets/splits/`.
 
