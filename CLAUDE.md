@@ -32,7 +32,7 @@ stardew-vision-training/
 │   │   ├── images/           # Real game screenshots
 │   │   └── annotations.jsonl # Per-image annotations
 │   ├── synthetic/
-│   │   └── {screen_type}/
+│   │   └── {screen_type}/        # caught_fish, pierre_shop, tv_dialog only (no no_tools)
 │   │       ├── images/           # Generated screenshots
 │   │       └── conversations.jsonl  # ChatML training conversations
 │   ├── eval_set.json         # 100 held-out images (NEVER train/val)
@@ -57,15 +57,16 @@ stardew-vision-training/
 
 **Screen types being trained** (4 categories):
 1. **caught_fish** — 33 real screenshots, 173 synthetic
-2. **no_tools** — 173 real screenshots, 173 synthetic (negative examples — screens with no applicable tool)
+2. **no_tools** — 173 real screenshots, **no synthetic** (negative examples — screens with no applicable tool)
 3. **pierre_shop** — 26 real screenshots, 173 synthetic
 4. **tv_dialog** — 45 real screenshots, 173 synthetic
 
 **Training strategy**:
 - Real screenshots collected in `datasets/{screen_type}/images/`
-- Synthetic variations generated in `datasets/synthetic/{screen_type}/images/`
+- Synthetic variations generated in `datasets/synthetic/{screen_type}/images/` (tool-calling classes only)
+- **no_tools has no synthetic data** — the visual variation is too broad for compositing. Real screenshots only, sourced from `datasets/no_tools/images/`. Intentionally oversampled at ~2:1 vs each tool class to cover the much larger "no tool needed" image space (supported by Larson et al. 2019, Gorilla/Patil et al. 2023)
 - 100 images reserved in `datasets/eval_set.json` (25 per type) — **NEVER used for training or validation**
-- Remaining real + all synthetic images used for training/validation (~870 total, 85/15 split)
+- Remaining real + all synthetic images used for training/validation (85/15 split)
 - Phase 1 focus: tool selection (screen → correct tool call or "no tool" refusal)
 
 **Current task**: Training pipeline validated (dry run successful), ready for full training runs
@@ -203,7 +204,9 @@ Exception: `pip install uv` is acceptable only as Dockerfile bootstrap.
 
 ### Dataset Structure and Splits
 
-**Data sources**: Real screenshots (`datasets/{screen_type}/annotations.jsonl`) and synthetic conversations (`datasets/synthetic/{screen_type}/conversations.jsonl`).
+**Data sources**: Real screenshots (`datasets/{screen_type}/annotations.jsonl`) and synthetic conversations (`datasets/synthetic/{screen_type}/conversations.jsonl`). The `no_tools` class uses real screenshots only — there is no `datasets/synthetic/no_tools/` directory. Synthetic data is only generated for the three tool-calling classes (caught_fish, pierre_shop, tv_dialog) where text can be composited onto clean backgrounds.
+
+**no_tools class balance**: The no_tools (rejection) class is intentionally oversampled at ~2:1 relative to each tool-calling class. This is because the universe of "no tool needed" screens is orders of magnitude larger than any specific tool screen, so more diverse negatives are needed to learn a robust rejection boundary. Target ~300-340 no_tools images vs ~150-170 per tool class.
 
 **Eval set** (`datasets/eval_set.json`): 100 images (25 per screen type) reserved for evaluation. These must **NEVER** be used in training or validation splits.
 

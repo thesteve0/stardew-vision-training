@@ -1,0 +1,87 @@
+{
+  "model": "experiments/qwen-tiny-v1",
+  "model_type": "finetuned",
+  "seed": 42,
+  "num_samples": 100,
+  "evaluated_at": "2026-04-23T00:27:07.292514+00:00",
+  "overall_accuracy": 0.69,
+  "macro_f1": 0.6332461261768532,
+  "per_class": {
+    "tv_dialog": {
+      "count": 25,
+      "correct": 24,
+      "accuracy": 0.96,
+      "precision": 0.75,
+      "recall": 0.96,
+      "f1": 0.8421052631578947
+    },
+    "caught_fish": {
+      "count": 25,
+      "correct": 18,
+      "accuracy": 0.72,
+      "precision": 1.0,
+      "recall": 0.72,
+      "f1": 0.8372093023255814
+    },
+    "pierre_shop": {
+      "count": 25,
+      "correct": 25,
+      "accuracy": 1.0,
+      "precision": 0.5681818181818182,
+      "recall": 1.0,
+      "f1": 0.7246376811594203
+    },
+    "no_tools": {
+      "count": 25,
+      "correct": 2,
+      "accuracy": 0.08,
+      "precision": 0.3333333333333333,
+      "recall": 0.08,
+      "f1": 0.12903225806451613
+    }
+  },
+  "confusion_matrix": [
+    [
+      24,
+      0,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      18,
+      3,
+      4,
+      0
+    ],
+    [
+      0,
+      0,
+      25,
+      0,
+      0
+    ],
+    [
+      8,
+      0,
+      15,
+      2,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "confusion_labels": [
+    "tv_dialog",
+    "caught_fish",
+    "pierre_shop",
+    "no_tools",
+    "unknown"
+  ]
+}

@@ -3,11 +3,13 @@
 
 import logging
 import os
+from pathlib import Path
 
 import torch
 from PIL import Image
 
 os.environ["TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL"] = "1"
+from peft import PeftModel
 from qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
@@ -15,23 +17,43 @@ from evaluation.prompt import build_messages
 from evaluation.tool_parser import ParsedPrediction, parse_model_output
 
 EVAL_IMAGE_SIZE = (1600, 1200)
+BASE_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct"
 
 logger = logging.getLogger(__name__)
 
 
+def _is_lora_adapter(model_path: str) -> bool:
+    return (Path(model_path) / "adapter_config.json").exists()
+
+
 def load_model(
-    model_path: str = "Qwen/Qwen2.5-VL-7B-Instruct",
+    model_path: str = BASE_MODEL,
 ) -> tuple[Qwen2_5_VLForConditionalGeneration, AutoProcessor]:
     """Load Qwen2.5-VL model and processor.
 
-    Uses FP16 (required for ROCm gfx1151, no BF16 support).
+    If model_path is a LoRA adapter directory, loads the base model
+    and applies the adapter. Uses FP16 (required for ROCm gfx1151).
     """
-    logger.info(f"Loading model: {model_path}")
-    processor = AutoProcessor.from_pretrained(model_path)
-    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        model_path,
-        device_map="auto",
-    )
+    if _is_lora_adapter(model_path):
+        logger.info(f"Loading base model: {BASE_MODEL}")
+        processor = AutoProcessor.from_pretrained(BASE_MODEL)
+        model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            BASE_MODEL,
+            torch_dtype=torch.float16,
+            device_map="auto",
+        )
+        logger.info(f"Applying LoRA adapter: {model_path}")
+        model = PeftModel.from_pretrained(model, model_path)
+        model = model.merge_and_unload()
+    else:
+        logger.info(f"Loading model: {model_path}")
+        processor = AutoProcessor.from_pretrained(model_path)
+        model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            model_path,
+            torch_dtype=torch.float16,
+            device_map="auto",
+        )
+
     model.eval()
     model = torch.compile(model)
     logger.info("Model loaded and compiled")

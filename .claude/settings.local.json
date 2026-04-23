@@ -47,7 +47,9 @@
       "Bash(.venv/bin/python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config_tiny.yaml --dry-run)",
       "Bash(python3 -m json.tool --no-ensure-ascii)",
       "Bash(python3 -m json.tool)",
-      "Bash(xxd /workspaces/stardew-vision-training/datasets/eval_set.json)"
+      "Bash(xxd /workspaces/stardew-vision-training/datasets/eval_set.json)",
+      "Bash(sort md5sum *)",
+      "Bash(sort -u echo \"Real unique images: $\\(wc -l < /tmp/real_md5s.txt\\)\" echo \"Synthetic unique images: $\\(wc -l < /tmp/synth_md5s.txt\\)\" echo \"Overlapping hashes: $\\(comm -12 /tmp/real_md5s.txt /tmp/synth_md5s.txt)"
     ]
   }
 }
