@@ -1,15 +1,14 @@
-# LoRA Fine-Tuning Configuration for Qwen2.5-VL-7B
+# LoRA Fine-Tuning Configuration for Qwen2.5-VL-7B (Phase 1: Tool Selection)
+# Full training on all synthetic data (Tier 2)
 
-# Model
 model_name: "Qwen/Qwen2.5-VL-7B-Instruct"
-torch_dtype: "float16"  # REQUIRED for ROCm gfx1151 - no BF16 support
+torch_dtype: "float16"  # REQUIRED for ROCm gfx1151 — no BF16 support
 
-# LoRA Configuration
 lora:
-  r: 16                    # LoRA rank
-  lora_alpha: 32           # LoRA alpha (scaling factor)
+  r: 16
+  lora_alpha: 32
   lora_dropout: 0.05
-  target_modules:          # Qwen2.5-VL attention modules
+  target_modules:
     - "q_proj"
     - "k_proj"
     - "v_proj"
@@ -17,64 +16,39 @@ lora:
   bias: "none"
   task_type: "CAUSAL_LM"
 
-# Training Arguments
 training:
-  output_dir: "experiments/qwen-tv-fish-v1"
+  output_dir: "experiments/qwen-tool-select-v1"
   num_train_epochs: 3
-  per_device_train_batch_size: 1
+  per_device_train_batch_size: 2      # 48GB VRAM supports batch 2
   per_device_eval_batch_size: 1
-  gradient_accumulation_steps: 8
-  learning_rate: 2.0e-4
-  warmup_steps: 100
+  gradient_accumulation_steps: 4      # effective batch = 8
+  learning_rate: 1.0e-4               # conservative for LoRA
+  warmup_steps: 50
   logging_steps: 10
   save_steps: 100
   eval_steps: 100
-  evaluation_strategy: "steps"
+  eval_strategy: "steps"
   save_strategy: "steps"
   save_total_limit: 3
   load_best_model_at_end: true
   metric_for_best_model: "eval_loss"
   greater_is_better: false
-  fp16: true               # FP16 training (required for ROCm)
-  bf16: false              # NO BF16 support on gfx1151
+  fp16: true
+  bf16: false
   dataloader_num_workers: 4
-  remove_unused_columns: false
   gradient_checkpointing: true
   optim: "adamw_torch"
   lr_scheduler_type: "cosine"
   max_grad_norm: 1.0
   report_to: "mlflow"
 
-# Dataset
 data:
   train_file: "datasets/splits/train.jsonl"
-  eval_file: "datasets/splits/eval.jsonl"
-  test_file: "datasets/splits/test.jsonl"
-  max_seq_length: 4096
-  preprocessing_num_workers: 4
+  eval_file: "datasets/splits/val.jsonl"
 
-# MLFlow
 mlflow:
-  experiment_name: "qwen-tv-fish-v1"
-  tracking_uri: "file://experiments/mlruns"
-  run_name: "qwen-tv-fish-v1-run1"
+  experiment_name: "qwen-tool-selection-train"
+  tracking_uri: "experiments/mlruns"
+  run_name: "tool-select-v1"
 
-# Chat Template
-# Uses custom Hermes-compatible tool calling template
-# (Copied from main stardew-vision repo configs/serving/)
-chat_template_path: "configs/qwen_tool_template.jinja"
-
-# Tool Definitions
-# Tools available during training
-tools:
-  - name: "crop_tv_dialog"
-    description: "Extract TV show type and dialog text from TV screen"
-  - name: "crop_caught_fish_notification"
-    description: "Extract fish name (via sprite matching) and length from caught fish notification"
-  - name: "crop_pierres_detail_panel"
-    description: "Extract item name, description, price, quantity from Pierre's shop detail panel"
-  - name: "text_to_speech"
-    description: "Convert text to speech audio"
-
-# Reproducibility
 seed: 42

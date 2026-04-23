@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Prepare training splits for Phase 1 (tool selection) fine-tuning.
 
-Reads synthetic conversations, transforms them into 3-message sequences
-(system + user image + assistant tool call), filters out eval-set images,
-and writes train/val/tiny JSONL splits.
+Reads both synthetic conversations and real annotated images, transforms
+them into 3-message sequences (system + user image + assistant tool call),
+filters out eval-set images, and writes train/val/tiny JSONL splits.
 
 Usage:
     python fine_tuning/qwen/data_prep.py
@@ -73,36 +73,83 @@ def transform_conversation(record: dict) -> dict | None:
     }
 
 
+def annotation_to_conversation(annotation: dict) -> dict:
+    """Convert a real image annotation into a synthetic-style conversation record."""
+    screen_type = annotation["screen_type"]
+    image_path = annotation["image_path"]
+
+    user_msg = {
+        "role": "user",
+        "content": [
+            {"type": "image", "image": f"file://{image_path}"},
+            {"type": "text", "text": "What's on this screen?"},
+        ],
+    }
+
+    if screen_type in TOOL_FOR_SCREEN:
+        assistant_content = format_tool_call(TOOL_FOR_SCREEN[screen_type])
+    else:
+        assistant_content = NO_TOOL_RESPONSE
+
+    return {
+        "messages": [user_msg],
+        "metadata": {"screen_type": screen_type, "synthetic": False},
+    }
+
+
 def load_and_transform(
-    synthetic_dir: Path, eval_images: set[str]
+    synthetic_dir: Path, datasets_dir: Path, eval_images: set[str]
 ) -> list[dict]:
     examples = []
     skipped_eval = 0
 
     for screen_type in SCREEN_TYPES:
+        count_synthetic = 0
+        count_real = 0
+
+        # Load synthetic conversations
         conv_file = synthetic_dir / screen_type / "conversations.jsonl"
-        if not conv_file.exists():
-            logger.warning("Missing: %s", conv_file)
-            continue
+        if conv_file.exists():
+            with open(conv_file) as f:
+                for line in f:
+                    record = json.loads(line)
+                    image_path = record["messages"][0]["content"][0]["image"]
+                    clean_path = image_path.removeprefix("file://")
 
-        count = 0
-        with open(conv_file) as f:
-            for line in f:
-                record = json.loads(line)
-                image_path = record["messages"][0]["content"][0]["image"]
-                # Strip file:// prefix for comparison
-                clean_path = image_path.removeprefix("file://")
+                    if clean_path in eval_images:
+                        skipped_eval += 1
+                        continue
 
-                if clean_path in eval_images:
-                    skipped_eval += 1
-                    continue
+                    transformed = transform_conversation(record)
+                    if transformed:
+                        examples.append(transformed)
+                        count_synthetic += 1
 
-                transformed = transform_conversation(record)
-                if transformed:
-                    examples.append(transformed)
-                    count += 1
+        # Load real annotated images
+        ann_file = datasets_dir / screen_type / "annotations.jsonl"
+        if ann_file.exists():
+            with open(ann_file) as f:
+                for line in f:
+                    if not line.strip():
+                        continue
+                    annotation = json.loads(line)
+                    image_path = annotation["image_path"]
 
-        logger.info("%-15s: %d examples loaded", screen_type, count)
+                    if image_path in eval_images:
+                        skipped_eval += 1
+                        continue
+
+                    record = annotation_to_conversation(annotation)
+                    transformed = transform_conversation(record)
+                    if transformed:
+                        examples.append(transformed)
+                        count_real += 1
+
+        logger.info(
+            "%-15s: %d synthetic + %d real = %d examples",
+            screen_type, count_synthetic, count_real,
+            count_synthetic + count_real,
+        )
 
     logger.info("Skipped %d eval-set images", skipped_eval)
     return examples
@@ -135,6 +182,11 @@ def make_tiny_split(examples: list[dict], per_class: int) -> list[dict]:
 def main():
     parser = argparse.ArgumentParser(description="Prepare Phase 1 training splits")
     parser.add_argument(
+        "--datasets-dir",
+        type=Path,
+        default=Path("datasets"),
+    )
+    parser.add_argument(
         "--synthetic-dir",
         type=Path,
         default=Path("datasets/synthetic"),
@@ -159,7 +211,7 @@ def main():
     eval_images = load_eval_image_paths(args.eval_set)
     logger.info("Eval set: %d images to exclude", len(eval_images))
 
-    examples = load_and_transform(args.synthetic_dir, eval_images)
+    examples = load_and_transform(args.synthetic_dir, args.datasets_dir, eval_images)
     random.shuffle(examples)
 
     split_idx = int(len(examples) * (1 - args.val_fraction))

@@ -43,7 +43,11 @@
       "WebFetch(domain:docs.vllm.ai)",
       "Bash(rocm-smi --showmemuse --showuse --csv)",
       "Bash(sqlite3 /workspaces/stardew-vision-training/mlflow.db \"SELECT experiment_id, name FROM experiments;\")",
-      "Bash(sqlite3 /workspaces/stardew-vision-training/mlflow.db \"SELECT run_uuid, name, status FROM runs;\")"
+      "Bash(sqlite3 /workspaces/stardew-vision-training/mlflow.db \"SELECT run_uuid, name, status FROM runs;\")",
+      "Bash(.venv/bin/python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config_tiny.yaml --dry-run)",
+      "Bash(python3 -m json.tool --no-ensure-ascii)",
+      "Bash(python3 -m json.tool)",
+      "Bash(xxd /workspaces/stardew-vision-training/datasets/eval_set.json)"
     ]
   }
 }

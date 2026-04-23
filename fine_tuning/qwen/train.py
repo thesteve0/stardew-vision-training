@@ -1,113 +1,144 @@
 #!/usr/bin/env python3
-"""
-Qwen2.5-VL LoRA fine-tuning script for Stardew Vision.
+"""Qwen2.5-VL LoRA fine-tuning for Stardew Vision Phase 1 (tool selection).
 
-Fine-tunes Qwen2.5-VL-7B on multi-turn ChatML conversations to learn:
-1. Screen classification → correct tool calling
-2. OCR result parsing → natural language narration
+Uses TRL's SFTTrainer with built-in VLM support. Training data is loaded
+from JSONL splits produced by data_prep.py and converted to prompt-completion
+format with PIL images for the built-in DataCollatorForVisionLanguageModeling.
 
 Usage:
     python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config.yaml
+    python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config_tiny.yaml --dry-run
 """
 
 import argparse
 import json
 import logging
 import os
+import tempfile
 from pathlib import Path
 
 import mlflow
 import torch
 import yaml
 from datasets import load_dataset
-from peft import LoraConfig, get_peft_model
-from transformers import (
-    AutoModelForVision2Seq,
-    AutoProcessor,
-    TrainingArguments,
-)
-from trl import SFTTrainer
+from peft import LoraConfig
+from PIL import Image
+from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
+from trl import SFTConfig, SFTTrainer
+
+os.environ["TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL"] = "1"
+
+EVAL_IMAGE_SIZE = (1600, 1200)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def load_config(config_path: str) -> dict:
-    """Load YAML configuration file."""
     with open(config_path) as f:
         return yaml.safe_load(f)
 
 
-def prepare_dataset(config: dict):
+def prepare_split_jsonl(input_path: str, output_path: str) -> int:
+    """Transform a data_prep.py JSONL split into prompt-completion format.
+
+    Writes a new JSONL where each record has:
+      - prompt: [system_msg, user_msg] with image placeholder
+      - completion: [assistant_msg]
+      - image_path: path to the image file
+
+    Images are loaded lazily during training via a dataset map transform.
     """
-    Load and prepare training dataset from JSONL files.
+    count = 0
+    with open(input_path) as fin, open(output_path, "w") as fout:
+        for line in fin:
+            raw = json.loads(line)
+            msgs = raw["messages"]
 
-    Expected format: ChatML conversations with tool calls.
-    """
-    train_file = config["data"]["train_file"]
-    eval_file = config["data"]["eval_file"]
+            system_msg = msgs[0]
+            user_msg = msgs[1]
+            assistant_msg = msgs[2]
 
-    logger.info(f"Loading training data from {train_file}")
-    logger.info(f"Loading eval data from {eval_file}")
+            image_path = None
+            user_content_clean = []
+            for part in user_msg["content"]:
+                if part.get("type") == "image":
+                    image_path = part.get("image", "").removeprefix("file://")
+                    user_content_clean.append({"type": "image"})
+                else:
+                    user_content_clean.append(part)
 
-    dataset = load_dataset(
-        "json",
-        data_files={
-            "train": train_file,
-            "validation": eval_file,
-        }
-    )
+            if not image_path or not Path(image_path).exists():
+                logger.warning("Skipping record with missing image: %s", image_path)
+                continue
 
-    logger.info(f"Train samples: {len(dataset['train'])}")
-    logger.info(f"Eval samples: {len(dataset['validation'])}")
+            record = {
+                "prompt": [
+                    system_msg,
+                    {"role": "user", "content": user_content_clean},
+                ],
+                "completion": [
+                    {"role": "assistant", "content": assistant_msg["content"]},
+                ],
+                "image_path": image_path,
+            }
+            fout.write(json.dumps(record) + "\n")
+            count += 1
 
-    return dataset
+    logger.info("Prepared %d samples from %s", count, input_path)
+    return count
+
+
+def load_images_transform(example):
+    """Map transform: load PIL image from path into the 'images' column."""
+    img = Image.open(example["image_path"]).convert("RGB").resize(EVAL_IMAGE_SIZE)
+    example["images"] = [img]
+    return example
 
 
 def main():
     parser = argparse.ArgumentParser(description="Fine-tune Qwen2.5-VL with LoRA")
+    parser.add_argument("--config", type=str, required=True, help="Path to YAML config")
+    parser.add_argument("--output-dir", type=str, help="Override output directory")
     parser.add_argument(
-        "--config",
-        type=str,
-        required=True,
-        help="Path to YAML config file"
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        help="Override output directory from config"
+        "--dry-run", action="store_true",
+        help="Run 2 training steps to verify pipeline"
     )
     args = parser.parse_args()
 
-    # Load configuration
     config = load_config(args.config)
     output_dir = args.output_dir or config["training"]["output_dir"]
 
-    # Set device
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    logger.info(f"Using device: {device}")
+    logger.info("Device: %s", device)
     if device == "cuda":
-        logger.info(f"GPU: {torch.cuda.get_device_name(0)}")
+        logger.info("GPU: %s", torch.cuda.get_device_name(0))
 
-    # Initialize MLFlow
+    # MLflow
     mlflow.set_tracking_uri(config["mlflow"]["tracking_uri"])
     mlflow.set_experiment(config["mlflow"]["experiment_name"])
 
     with mlflow.start_run(run_name=config["mlflow"]["run_name"]):
-        # Log config
-        mlflow.log_params(config)
+        mlflow.log_params({
+            "model_name": config["model_name"],
+            "lora_r": config["lora"]["r"],
+            "lora_alpha": config["lora"]["lora_alpha"],
+            "learning_rate": config["training"]["learning_rate"],
+            "batch_size": config["training"]["per_device_train_batch_size"],
+            "grad_accum": config["training"]["gradient_accumulation_steps"],
+            "dry_run": args.dry_run,
+        })
 
         # Load processor and model
-        logger.info(f"Loading model: {config['model_name']}")
+        logger.info("Loading model: %s", config["model_name"])
         processor = AutoProcessor.from_pretrained(config["model_name"])
-        model = AutoModelForVision2Seq.from_pretrained(
+        model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             config["model_name"],
             torch_dtype=getattr(torch, config["torch_dtype"]),
             device_map="auto",
         )
 
-        # Configure LoRA
-        logger.info("Configuring LoRA")
+        # LoRA config — passed to SFTTrainer, which applies PEFT internally
         lora_config = LoraConfig(
             r=config["lora"]["r"],
             lora_alpha=config["lora"]["lora_alpha"],
@@ -117,69 +148,85 @@ def main():
             task_type=config["lora"]["task_type"],
         )
 
-        model = get_peft_model(model, lora_config)
-        model.print_trainable_parameters()
+        # Prepare and load datasets
+        tmp_dir = tempfile.mkdtemp(prefix="sft_data_")
+        train_jsonl = os.path.join(tmp_dir, "train.jsonl")
+        eval_jsonl = os.path.join(tmp_dir, "eval.jsonl")
 
-        # Load dataset
-        dataset = prepare_dataset(config)
+        prepare_split_jsonl(config["data"]["train_file"], train_jsonl)
+        prepare_split_jsonl(config["data"]["eval_file"], eval_jsonl)
 
-        # Training arguments
-        training_args = TrainingArguments(
-            output_dir=output_dir,
-            num_train_epochs=config["training"]["num_train_epochs"],
-            per_device_train_batch_size=config["training"]["per_device_train_batch_size"],
-            per_device_eval_batch_size=config["training"]["per_device_eval_batch_size"],
-            gradient_accumulation_steps=config["training"]["gradient_accumulation_steps"],
-            learning_rate=config["training"]["learning_rate"],
-            warmup_steps=config["training"]["warmup_steps"],
-            logging_steps=config["training"]["logging_steps"],
-            save_steps=config["training"]["save_steps"],
-            eval_steps=config["training"]["eval_steps"],
-            evaluation_strategy=config["training"]["evaluation_strategy"],
-            save_strategy=config["training"]["save_strategy"],
-            save_total_limit=config["training"]["save_total_limit"],
-            load_best_model_at_end=config["training"]["load_best_model_at_end"],
-            metric_for_best_model=config["training"]["metric_for_best_model"],
-            greater_is_better=config["training"]["greater_is_better"],
-            fp16=config["training"]["fp16"],
-            bf16=config["training"]["bf16"],
-            dataloader_num_workers=config["training"]["dataloader_num_workers"],
-            remove_unused_columns=config["training"]["remove_unused_columns"],
-            gradient_checkpointing=config["training"]["gradient_checkpointing"],
-            optim=config["training"]["optim"],
-            lr_scheduler_type=config["training"]["lr_scheduler_type"],
-            max_grad_norm=config["training"]["max_grad_norm"],
-            report_to=config["training"]["report_to"],
-            seed=config["seed"],
-        )
+        ds = load_dataset("json", data_files={"train": train_jsonl, "eval": eval_jsonl})
+        ds = ds.map(load_images_transform, remove_columns=["image_path"])
+        train_dataset = ds["train"]
+        eval_dataset = ds["eval"]
 
-        # TODO: Implement custom data collator for ChatML format with images
-        # TODO: Add chat template processing
+        # Build SFTConfig
+        training_kwargs = {
+            "output_dir": output_dir,
+            "num_train_epochs": config["training"]["num_train_epochs"],
+            "per_device_train_batch_size": config["training"]["per_device_train_batch_size"],
+            "per_device_eval_batch_size": config["training"].get("per_device_eval_batch_size", 1),
+            "gradient_accumulation_steps": config["training"]["gradient_accumulation_steps"],
+            "learning_rate": config["training"]["learning_rate"],
+            "warmup_steps": config["training"]["warmup_steps"],
+            "logging_steps": config["training"]["logging_steps"],
+            "save_steps": config["training"]["save_steps"],
+            "eval_steps": config["training"]["eval_steps"],
+            "eval_strategy": config["training"].get("eval_strategy", "steps"),
+            "save_strategy": config["training"].get("save_strategy", "steps"),
+            "save_total_limit": config["training"]["save_total_limit"],
+            "load_best_model_at_end": config["training"]["load_best_model_at_end"],
+            "metric_for_best_model": config["training"]["metric_for_best_model"],
+            "greater_is_better": config["training"]["greater_is_better"],
+            "fp16": config["training"]["fp16"],
+            "bf16": config["training"]["bf16"],
+            "dataloader_num_workers": config["training"]["dataloader_num_workers"],
+            "remove_unused_columns": False,
+            "gradient_checkpointing": config["training"]["gradient_checkpointing"],
+            "optim": config["training"]["optim"],
+            "lr_scheduler_type": config["training"]["lr_scheduler_type"],
+            "max_grad_norm": config["training"]["max_grad_norm"],
+            "report_to": config["training"]["report_to"],
+            "seed": config["seed"],
+            # VLM-specific
+            "max_length": None,
+            "packing": False,
+            "dataset_kwargs": {"skip_prepare_dataset": True},
+        }
+
+        if args.dry_run:
+            training_kwargs["max_steps"] = 2
+            training_kwargs["logging_steps"] = 1
+            training_kwargs["save_strategy"] = "no"
+            training_kwargs["eval_strategy"] = "no"
+            training_kwargs["report_to"] = "none"
+
+        sft_config = SFTConfig(**training_kwargs)
 
         # Initialize trainer
         trainer = SFTTrainer(
             model=model,
-            args=training_args,
-            train_dataset=dataset["train"],
-            eval_dataset=dataset["validation"],
-            # data_collator=data_collator,  # TODO
+            args=sft_config,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            processing_class=processor,
+            peft_config=lora_config,
         )
 
         # Train
-        logger.info("Starting training")
+        logger.info("Starting training%s", " (dry run)" if args.dry_run else "")
         trainer.train()
 
-        # Save final model
-        logger.info(f"Saving final model to {output_dir}")
-        trainer.save_model(output_dir)
-        processor.save_pretrained(output_dir)
+        if not args.dry_run:
+            logger.info("Saving model to %s", output_dir)
+            trainer.save_model(output_dir)
+            processor.save_pretrained(output_dir)
 
-        # Log final metrics
-        metrics = trainer.evaluate()
-        mlflow.log_metrics(metrics)
+            metrics = trainer.evaluate()
+            mlflow.log_metrics(metrics)
 
         logger.info("Training complete!")
-        logger.info(f"Model saved to: {output_dir}")
 
 
 if __name__ == "__main__":
