@@ -1,0 +1,13 @@
+.venv/
+.git/
+.cache/
+.claude/
+datasets/
+experiments/
+docs/
+synthetic_data/
+scripts/
+tools-code/
+tmp/
+*.pyc
+__pycache__/

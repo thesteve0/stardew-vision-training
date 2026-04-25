@@ -2,34 +2,31 @@
 #
 # Prerequisites:
 #   1. KubeRay operator installed on the cluster
-#   2. Kubernetes secrets created:
-#      - s3-credentials: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION
-#      - mlflow-credentials: MLFLOW_TRACKING_URI, MLFLOW_TRACKING_TOKEN (if auth required)
-#   3. Training data uploaded to S3 (datasets/splits/*.jsonl + datasets/*/images/)
-#   4. Container image available with project dependencies
+#   2. Kubernetes secrets: s3-credentials, mlflow-credentials, hf-credentials
+#   3. EFS PVCs: training-data (populated with datasets), training-checkpoints
+#   4. Container image built via: oc start-build stardew-training --from-dir=.
 #
 # Usage:
-#   kubectl apply -f deploy/rayjob.yaml
-#   kubectl logs -f job/stardew-lora-train  # follow driver logs
-#
-# Placeholder values marked with CHANGEME must be updated before use.
+#   oc apply -f deploy/rayjob.yaml
+#   oc logs -f job/stardew-lora-train -n stardew-vision-training
 
 apiVersion: ray.io/v1
 kind: RayJob
 metadata:
   name: stardew-lora-train
-  namespace: stardew-vision  # CHANGEME
+  namespace: stardew-vision-training
 spec:
   entrypoint: >-
-    python fine_tuning/qwen/train_ray.py
-    --config fine_tuning/qwen/lora_config_cluster.yaml
+    python -m fine_tuning.qwen.train_ray
+    --config /app/fine_tuning/qwen/lora_config_cluster.yaml
     --num-workers 2
-    --storage-path s3://CHANGEME/ray-results/
+    --storage-path /checkpoints/ray-results/
 
   runtimeEnvYAML: |
-    working_dir: "s3://CHANGEME/training-code/stardew-vision-training.zip"
     env_vars:
       NCCL_DEBUG: "INFO"
+      TRAINING_DATA_ROOT: "/data"
+      MLFLOW_WORKSPACE: "stardew-vision-training"
 
   shutdownAfterJobFinishes: true
   ttlSecondsAfterFinished: 3600
@@ -42,7 +39,7 @@ spec:
         spec:
           containers:
             - name: ray-head
-              image: quay.io/opendatahub/odh-pipeline-runtime-pytorch-cuda-py312-ubi9  # CHANGEME if needed
+              image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training:latest
               resources:
                 requests:
                   cpu: "2"
@@ -50,11 +47,27 @@ spec:
                 limits:
                   cpu: "4"
                   memory: "8Gi"
+              env:
+                - name: MLFLOW_WORKSPACE
+                  value: "stardew-vision-training"
               envFrom:
                 - secretRef:
                     name: s3-credentials
                 - secretRef:
                     name: mlflow-credentials
+              volumeMounts:
+                - name: training-data
+                  mountPath: /data
+                  readOnly: true
+                - name: training-checkpoints
+                  mountPath: /checkpoints
+          volumes:
+            - name: training-data
+              persistentVolumeClaim:
+                claimName: training-data
+            - name: training-checkpoints
+              persistentVolumeClaim:
+                claimName: training-checkpoints
 
     workerGroupSpecs:
       - replicas: 2
@@ -67,7 +80,7 @@ spec:
           spec:
             containers:
               - name: ray-worker
-                image: quay.io/opendatahub/odh-pipeline-runtime-pytorch-cuda-py312-ubi9  # CHANGEME if needed
+                image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training:latest
                 resources:
                   requests:
                     cpu: "4"
@@ -77,11 +90,27 @@ spec:
                     cpu: "8"
                     memory: "48Gi"
                     nvidia.com/gpu: 1
+                env:
+                  - name: MLFLOW_WORKSPACE
+                    value: "stardew-vision-training"
                 envFrom:
                   - secretRef:
                       name: s3-credentials
                   - secretRef:
                       name: mlflow-credentials
+                volumeMounts:
+                  - name: training-data
+                    mountPath: /data
+                    readOnly: true
+                  - name: training-checkpoints
+                    mountPath: /checkpoints
+            volumes:
+              - name: training-data
+                persistentVolumeClaim:
+                  claimName: training-data
+              - name: training-checkpoints
+                persistentVolumeClaim:
+                  claimName: training-checkpoints
             tolerations:
               - key: nvidia.com/gpu
                 operator: Exists

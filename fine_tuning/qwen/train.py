@@ -73,13 +73,19 @@ def prepare_split_jsonl(input_path: str, output_path: str) -> int:
                 logger.warning("Skipping record with missing image: %s", image_path)
                 continue
 
+            system_content = system_msg["content"]
+            if isinstance(system_content, str):
+                system_content = [{"type": "text", "text": system_content}]
+            assistant_content = assistant_msg["content"]
+            if isinstance(assistant_content, str):
+                assistant_content = [{"type": "text", "text": assistant_content}]
             record = {
                 "prompt": [
-                    system_msg,
+                    {"role": "system", "content": system_content},
                     {"role": "user", "content": user_content_clean},
                 ],
                 "completion": [
-                    {"role": "assistant", "content": assistant_msg["content"]},
+                    {"role": "assistant", "content": assistant_content},
                 ],
                 "image_path": image_path,
             }
@@ -185,6 +191,7 @@ def main():
             "dataloader_num_workers": config["training"]["dataloader_num_workers"],
             "remove_unused_columns": False,
             "gradient_checkpointing": config["training"]["gradient_checkpointing"],
+            "gradient_checkpointing_kwargs": {"use_reentrant": False},
             "optim": config["training"]["optim"],
             "lr_scheduler_type": config["training"]["lr_scheduler_type"],
             "max_grad_norm": config["training"]["max_grad_norm"],

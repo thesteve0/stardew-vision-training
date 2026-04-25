@@ -71,13 +71,7 @@ stardew-vision-training/
 - `data_prep.py` splits tool-calling classes at 85/15 train/val, then caps no_tools training at 2:1 ratio vs average tool class, with overflow going to validation (see split strategy below)
 - Phase 1 focus: tool selection (screen → correct tool call or "no tool" refusal)
 
-**Current task**: Full training complete (97.6% eval accuracy). Next: deploy to KubeRay on OpenShift AI 3.3
-
-**Training results** (full 3-epoch run, single AMD ROCm GPU via Ray Train):
-- 97.6% overall accuracy, 97.7% macro F1 on 125-image eval set
-- 291 steps, ~4h 40m wall time, ~48s/step steady state
-- Val loss bottomed at epoch 2 (0.0038), mild overfit at epoch 3 (0.0044) — 2 epochs may be optimal
-- See `docs/comparison-small-training-runs.md` for full comparison across all runs
+**Current task**: Rerunning training with corrected code (aligned `gradient_checkpointing_kwargs` between local and distributed). Fresh baseline needed before cluster comparison.
 
 ---
 

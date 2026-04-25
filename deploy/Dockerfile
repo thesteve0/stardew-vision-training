@@ -1,0 +1,13 @@
+FROM registry.redhat.io/rhoai/odh-training-cuda128-torch29-py312-rhel9:v3.4.0-ea.2
+
+WORKDIR /app
+
+# Base image already has: transformers, peft, trl, datasets, accelerate,
+# deepspeed, mlflow, torch, pillow, pyyaml, numpy, pandas.
+# Only install what's missing for training.
+RUN pip install --no-cache-dir \
+    "ray[default,train]>=2.40.0" \
+    "qwen-vl-utils>=0.0.8"
+
+COPY fine_tuning/ fine_tuning/
+COPY evaluation/ evaluation/

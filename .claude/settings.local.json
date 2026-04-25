@@ -54,7 +54,34 @@
       "Bash(python3 -c \" from ray.train import CheckpointConfig help\\(CheckpointConfig.__init__\\) \")",
       "Bash(python3 -c \" import ray.train.huggingface.transformers as rht import inspect print\\(inspect.getsource\\(rht.RayTrainReportCallback\\)\\) \")",
       "Bash(python3 -c \" import ray.train.huggingface.transformers as rht import inspect print\\(inspect.getsource\\(rht.prepare_trainer\\)\\) \")",
-      "Bash(python3 -c \" from ray.train import FailureConfig help\\(FailureConfig.__init__\\) \")"
+      "Bash(python3 -c \" from ray.train import FailureConfig help\\(FailureConfig.__init__\\) \")",
+      "Bash(oc whoami *)",
+      "Bash(oc project *)",
+      "Bash(oc get *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(f'{k}: {v}'\\) for k,v in sorted\\(d.items\\(\\)\\) if 'gpu' in k.lower\\(\\) or 'nvidia' in k.lower\\(\\)]\")",
+      "Bash(oc logs *)",
+      "WebFetch(domain:catalog.redhat.com)",
+      "Bash(oc describe *)",
+      "Bash(oc apply *)",
+      "Bash(oc delete *)",
+      "Bash(git checkout *)",
+      "WebFetch(domain:ai-on-openshift.io)",
+      "WebFetch(domain:blog.min.io)",
+      "WebFetch(domain:min.io)",
+      "WebFetch(domain:myopenshiftblog.com)",
+      "Read(//opt/**)",
+      "Read(//root/**)",
+      "Bash(find / -name \"aws_credentials\" -o -name \"aws-credentials\")",
+      "Bash(export PATH=\"/.jbdevcontainer/bin:$PATH\")",
+      "Bash(oc rsync *)",
+      "Bash(oc exec *)",
+      "Bash(oc patch *)",
+      "Bash(oc start-build *)",
+      "WebFetch(domain:community-charts.github.io)",
+      "WebFetch(domain:mlflow.org)",
+      "Bash(oc wait *)",
+      "Bash(tar xf *)"
     ]
-  }
+  },
+  "model": "claude-opus-4-6"
 }

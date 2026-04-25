@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stardew-eval
+  namespace: stardew-vision-training
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: eval
+          image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training:latest
+          workingDir: /data
+          command:
+            - python
+            - -m
+            - evaluation.run_baseline
+            - --model
+            - /checkpoints/model-output
+            - --datasets-dir
+            - /data/datasets
+            - --output-dir
+            - /checkpoints/eval-results
+            - --run-name
+            - cluster-v1
+          env:
+            - name: PYTHONPATH
+              value: "/app"
+            - name: MLFLOW_TRACKING_URI
+              value: ""
+          resources:
+            requests:
+              cpu: "4"
+              memory: "32Gi"
+              nvidia.com/gpu: 1
+            limits:
+              cpu: "8"
+              memory: "48Gi"
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: training-data
+              mountPath: /data
+              readOnly: true
+            - name: training-checkpoints
+              mountPath: /checkpoints
+      volumes:
+        - name: training-data
+          persistentVolumeClaim:
+            claimName: training-data
+        - name: training-checkpoints
+          persistentVolumeClaim:
+            claimName: training-checkpoints
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule

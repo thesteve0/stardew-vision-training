@@ -95,11 +95,11 @@ def train_func(config: dict):
     # relative paths work — including those inside prepare_split_jsonl
     # (Path.exists check) and load_images_transform (Image.open).
     config_dir = os.path.dirname(os.path.abspath(config["config_path"]))
-    project_root = os.path.dirname(os.path.dirname(config_dir))
+    project_root = os.environ.get("TRAINING_DATA_ROOT") or os.path.dirname(os.path.dirname(config_dir))
     os.chdir(project_root)
 
     def _resolve(path: str) -> str:
-        if os.path.isabs(path) or path.startswith("s3://"):
+        if os.path.isabs(path) or path.startswith(("s3://", "http://", "https://")):
             return path
         return os.path.join(project_root, path)
 
@@ -109,7 +109,12 @@ def train_func(config: dict):
     world_size = ray.train.get_context().get_world_size()
 
     # MLflow — rank 0 only
-    if world_rank == 0:
+    use_mlflow = yaml_config["training"].get("report_to") == "mlflow"
+    if world_rank == 0 and use_mlflow:
+        token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        if os.path.exists(token_path):
+            with open(token_path) as f:
+                os.environ["MLFLOW_TRACKING_TOKEN"] = f.read().strip()
         mlflow.set_tracking_uri(_resolve(yaml_config["mlflow"]["tracking_uri"]))
         mlflow.set_experiment(yaml_config["mlflow"]["experiment_name"])
         mlflow.start_run(run_name=yaml_config["mlflow"]["run_name"])
@@ -201,6 +206,7 @@ def train_func(config: dict):
         "dataloader_num_workers": tc["dataloader_num_workers"],
         "remove_unused_columns": False,
         "gradient_checkpointing": tc["gradient_checkpointing"],
+        "gradient_checkpointing_kwargs": {"use_reentrant": False},
         "optim": tc["optim"],
         "lr_scheduler_type": tc["lr_scheduler_type"],
         "max_grad_norm": tc["max_grad_norm"],
@@ -261,8 +267,9 @@ def train_func(config: dict):
         metrics["eval_wall_time_min"] = round(eval_duration / 60, 1)
         metrics["total_wall_time_min"] = round((train_duration + eval_duration) / 60, 1)
         metrics["seconds_per_step"] = round(train_duration / max(steps, 1), 1)
-        mlflow.log_metrics(metrics)
-        mlflow.end_run()
+        if use_mlflow:
+            mlflow.log_metrics(metrics)
+            mlflow.end_run()
 
     logger.info("Training complete!")
 

@@ -1,11 +1,16 @@
 ---
 name: Cluster hardware and ops
-description: OpenShift cluster has 2-3 Nvidia L40S GPUs (48GB VRAM, BF16 capable); James Harmison is ops deploying MLflow
+description: OpenShift AI cluster — 1x L40S autoscaling to 4; MLflow deployed; base image identified
 type: project
-originSessionId: 46553f92-c1a3-4c2b-8ed3-5d6452f9494a
+originSessionId: 08a9a0d5-1cf4-4bcc-a246-d057ff1cac92
 ---
-OpenShift AI cluster for training has 2-3 Nvidia L40S GPUs (48GB VRAM each, Ada Lovelace, supports BF16/FP16/INT8).
+OpenShift AI cluster at api.stardew-vision.sandbox5291.opentlc.com, namespace `stardew-vision-training`.
+
+- GPU: 1x NVIDIA L40S (g6e.2xlarge, 48GB VRAM, Ada Lovelace) with autoscaling to 4 GPU nodes
+- MLflow: deployed via mlflows.mlflow.opendatahub.io CRD, running in redhat-ods-applications
+- S3: NooBaa via OpenShift Data Foundation (OBC in our namespace)
+- Base training image: `registry.redhat.io/rhoai/odh-training-cuda128-torch29-py312-rhel9:v3.4.0-ea.2` (PyTorch 2.9, Python 3.12, CUDA 12.8)
 
 **Why:** Need multi-GPU training at scale beyond single-GPU devcontainer.
 
-**How to apply:** Training code for cluster uses BF16 (not FP16), DDP is sufficient (no FSDP needed for 7B + LoRA), batch size 4 per GPU feasible. NVIDIA container image needed (separate from ROCm devcontainer). Candidate base image: `quay.io/opendatahub/odh-pipeline-runtime-pytorch-cuda-py312-ubi9` (awaiting confirmation from container team as of 2026-04-22). James Harmison is the ops person deploying MLflow on the same OpenShift cluster — coordinate with him on tracking URI and auth.
+**How to apply:** Training code for cluster uses BF16 (not FP16 like local ROCm). DDP with 2 workers planned. Custom image needed on top of base to add transformers/peft/trl/ray/etc. User wants model output to both HuggingFace Hub and S3 (for vLLM in stardew-vision namespace).
