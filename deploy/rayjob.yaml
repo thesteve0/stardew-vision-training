@@ -4,7 +4,7 @@
 #   1. KubeRay operator installed on the cluster
 #   2. Kubernetes secrets: s3-credentials, mlflow-credentials, hf-credentials
 #   3. EFS PVCs: training-data (populated with datasets), training-checkpoints
-#   4. Container image built via: oc start-build stardew-training --from-dir=.
+#   4. Container image built locally and pushed via port-forward (see CLAUDE.md § "Building and Pushing the Training Image")
 #
 # Usage:
 #   oc apply -f deploy/rayjob.yaml
@@ -18,7 +18,7 @@ metadata:
 spec:
   entrypoint: >-
     python -m fine_tuning.qwen.train_ray
-    --config /app/fine_tuning/qwen/lora_config_cluster.yaml
+    --config /app/fine_tuning/qwen/lora_config_ray_cluster.yaml
     --num-workers 2
     --storage-path /checkpoints/ray-results/
 

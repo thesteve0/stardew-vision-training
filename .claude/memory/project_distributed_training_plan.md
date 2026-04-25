@@ -16,6 +16,6 @@ Progression:
 
 **How to apply:**
 - Both `train.py` and `train_ray.py` now use `use_reentrant=False` — aligned
-- `lora_config_cluster.yaml` has effective batch 16 (4 × 2 workers × 2 grad_accum). To match local's 8, set `gradient_accumulation_steps: 1`
+- `lora_config_ray_cluster.yaml` has effective batch 16 (4 × 2 workers × 2 grad_accum). To match local's 8, set `gradient_accumulation_steps: 1`
 - `deploy/rayjob.yaml` ready with PVC-based data mounting
 - Cluster: 1x L40S (autoscales to 4), BF16 capable

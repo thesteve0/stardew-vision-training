@@ -13,7 +13,7 @@ Usage:
 
     # Multi-GPU on KubeRay cluster
     python fine_tuning/qwen/train_ray.py \
-        --config fine_tuning/qwen/lora_config_cluster.yaml \
+        --config fine_tuning/qwen/lora_config_ray_cluster.yaml \
         --num-workers 2 \
         --storage-path s3://bucket/ray-results/
 """

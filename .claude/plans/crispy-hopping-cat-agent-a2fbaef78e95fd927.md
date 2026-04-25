@@ -19,7 +19,7 @@ metadata:
   name: stardew-lora-train
   namespace: stardew-vision-training
 spec:
-  entrypoint: python /app/fine_tuning/qwen/train_ray.py --config /app/fine_tuning/qwen/lora_config_cluster.yaml --num-workers 2 --storage-path /mnt/checkpoints/ray-results/
+  entrypoint: python /app/fine_tuning/qwen/train_ray.py --config /app/fine_tuning/qwen/lora_config_ray_cluster.yaml --num-workers 2 --storage-path /mnt/checkpoints/ray-results/
   shutdownAfterJobFinishes: true
   ttlSecondsAfterFinished: 3600
 
@@ -458,7 +458,7 @@ When code is baked into the image, the entrypoint references the image path dire
 
 ```yaml
 spec:
-  entrypoint: python /app/fine_tuning/qwen/train_ray.py --config /app/fine_tuning/qwen/lora_config_cluster.yaml --num-workers 2 --storage-path /mnt/checkpoints/ray-results/
+  entrypoint: python /app/fine_tuning/qwen/train_ray.py --config /app/fine_tuning/qwen/lora_config_ray_cluster.yaml --num-workers 2 --storage-path /mnt/checkpoints/ray-results/
   # NO runtimeEnvYAML working_dir needed!
 ```
 

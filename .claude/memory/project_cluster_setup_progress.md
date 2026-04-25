@@ -25,7 +25,7 @@ All code reverted to pre-session state (commit c72b453). No today's changes comm
 
 1. `train_ray.py` `_resolve()` — doesn't handle `https://` URLs, mangles MLflow tracking URI
 2. `train_ray.py` — needs `gradient_checkpointing_kwargs={"use_reentrant": False}` for DDP + LoRA
-3. `lora_config_cluster.yaml` — set to 2 epochs (user preference, validated by val loss curve)
+3. `lora_config_ray_cluster.yaml` — set to 2 epochs (user preference, validated by val loss curve)
 
 ## Plan for next session
 

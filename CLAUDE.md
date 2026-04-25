@@ -159,7 +159,36 @@ python fine_tuning/qwen/data_prep.py
 
 This reads both `datasets/synthetic/*/conversations.jsonl` and `datasets/*/annotations.jsonl`, excludes eval set images, and writes to `datasets/splits/`.
 
-### 5. Fine-Tuning
+### 5. Building and Pushing the Training Image
+
+The training image is built locally on the host (not in the devcontainer) and pushed directly to the OpenShift cluster's internal registry via port-forward.
+
+```bash
+# 1. Build locally (from repo root on the host)
+podman build -t stardew-training:latest -f deploy/Dockerfile .
+
+# 2. Port-forward to the OpenShift internal registry
+oc port-forward svc/image-registry -n openshift-image-registry 5000:5000 &
+
+# 3. Authenticate to the registry
+podman login localhost:5000 \
+  -u $(oc whoami) \
+  -p $(oc whoami -t) \
+  --tls-verify=false
+
+# 4. Tag and push
+podman tag stardew-training:latest \
+  localhost:5000/stardew-vision-training/stardew-training:latest
+podman push localhost:5000/stardew-vision-training/stardew-training:latest \
+  --tls-verify=false
+
+# 5. Kill the port-forward
+kill %1
+```
+
+The image bakes in `fine_tuning/` and `evaluation/` code. Training data is mounted at runtime via PVCs (not in the image). Rebuild and push after any code changes to `train.py`, `train_ray.py`, configs, or eval scripts.
+
+### 6. Fine-Tuning
 
 **Standalone** (single GPU, no Ray):
 ```bash
@@ -177,19 +206,14 @@ python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_tiny.
 
 # Multi-GPU on KubeRay (submitted via deploy/rayjob.yaml)
 python fine_tuning/qwen/train_ray.py \
-  --config fine_tuning/qwen/lora_config_cluster.yaml \
+  --config fine_tuning/qwen/lora_config_ray_cluster.yaml \
   --num-workers 2 \
   --storage-path s3://bucket/ray-results/
 ```
 
 Uses LoRA (rank=16, alpha=32) via PEFT. Ray checkpoints saved to `~/ray_results/`. Standalone checkpoints saved to `experiments/`.
 
-**Timing reference** (single AMD ROCm GPU, 775 samples):
-- ~48s/step steady state, ~250s first step (torch.compile)
-- 3 epochs / 291 steps: ~4h 40m total
-- Eval pass (146 val samples): ~7 min
-
-### 6. Evaluation
+### 7. Evaluation
 
 ```bash
 # Tool calling accuracy
@@ -203,7 +227,7 @@ python evaluation/eval_narration.py \
   --test-set datasets/splits/test.jsonl
 ```
 
-### 7. Uploading to HuggingFace Hub
+### 8. Uploading to HuggingFace Hub
 
 ```bash
 python scripts/upload_to_hub.py \
