@@ -9,7 +9,7 @@ Usage:
     python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_tiny.yaml --dry-run
 
     # Local single-GPU via Ray (full)
-    python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config.yaml
+    python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_local.yaml
 
     # Multi-GPU on KubeRay cluster
     python fine_tuning/qwen/train_ray.py \

@@ -6,7 +6,7 @@ from JSONL splits produced by data_prep.py and converted to prompt-completion
 format with PIL images for the built-in DataCollatorForVisionLanguageModeling.
 
 Usage:
-    python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config.yaml
+    python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config_local.yaml
     python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config_tiny.yaml --dry-run
 """
 

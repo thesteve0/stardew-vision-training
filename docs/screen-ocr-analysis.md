@@ -359,7 +359,7 @@ Once extraction tools are built, create these artifacts for fine-tuning:
 2. **narration_templates.json** — Natural language templates for TTS output
 3. **conversations_real.jsonl** — ChatML conversations from real screenshots
 4. **conversations_synthetic.jsonl** — LLM-generated variations
-5. **lora_config.yaml** — LoRA fine-tuning hyperparameters
+5. **lora_config_local.yaml** — LoRA fine-tuning hyperparameters
 6. **eval_metrics.yaml** — Evaluation rubric (tool selection accuracy, field extraction F1, narration quality)
 
 Detailed artifact specs will be documented after extraction tools are validated.

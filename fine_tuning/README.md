@@ -10,12 +10,13 @@ This directory contains fine-tuning scripts for VLM and OCR models.
 
 **Key files**:
 - `train.py` — Main training script
-- `lora_config.yaml` — Hyperparameters and configuration
+- `lora_config_local.yaml` — Hyperparameters for standalone training
+- `lora_config_ray_local.yaml` — Hyperparameters for local Ray training
 - `data_prep.py` — (TODO) Prepare ChatML conversations from annotations
 
 **Usage**:
 ```bash
-python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config.yaml
+python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config_local.yaml
 ```
 
 **Training data**: `datasets/splits/train.jsonl` (ChatML format)
@@ -40,7 +41,7 @@ python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config.yaml
 ## Training Workflow
 
 1. **Prepare datasets**: `datasets/splits/{train,eval,test}.jsonl`
-2. **Configure**: Edit `qwen/lora_config.yaml`
+2. **Configure**: Edit `qwen/lora_config_local.yaml`
 3. **Train**: Run `qwen/train.py`
 4. **Monitor**: MLFlow UI at `http://localhost:5000`
 5. **Evaluate**: Use `evaluation/` scripts
@@ -50,7 +51,7 @@ python fine_tuning/qwen/train.py --config fine_tuning/qwen/lora_config.yaml
 
 ## LoRA Configuration
 
-Default settings (see `qwen/lora_config.yaml`):
+Default settings (see `qwen/lora_config_local.yaml`):
 - **Rank**: 16
 - **Alpha**: 32
 - **Dropout**: 0.05

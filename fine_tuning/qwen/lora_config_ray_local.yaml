@@ -1,9 +1,9 @@
 # LoRA Fine-Tuning Configuration for Ray Train (Local, AMD ROCm)
-# Same hyperparameters as lora_config.yaml, used with train_ray.py
+# Same hyperparameters as lora_config_local.yaml, used with train_ray.py
 #
 # Usage:
-#   python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_ray.yaml
-#   python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_ray.yaml --dry-run
+#   python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_ray_local.yaml
+#   python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_ray_local.yaml --dry-run
 
 model_name: "Qwen/Qwen2.5-VL-7B-Instruct"
 torch_dtype: "float16"  # REQUIRED for ROCm gfx1151 — no BF16 support

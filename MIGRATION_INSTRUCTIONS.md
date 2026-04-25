@@ -160,7 +160,7 @@ python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_
 4. **Fine-tune Qwen**:
    ```bash
    python fine_tuning/qwen/train.py \
-     --config fine_tuning/qwen/lora_config.yaml
+     --config fine_tuning/qwen/lora_config_local.yaml
    ```
 
 ---

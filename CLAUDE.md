@@ -193,13 +193,13 @@ The image bakes in `fine_tuning/` and `evaluation/` code. Training data is mount
 **Standalone** (single GPU, no Ray):
 ```bash
 python fine_tuning/qwen/train.py \
-  --config fine_tuning/qwen/lora_config.yaml
+  --config fine_tuning/qwen/lora_config_local.yaml
 ```
 
 **Ray Train** (local single GPU or multi-GPU on KubeRay):
 ```bash
 # Local single-GPU
-python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config.yaml
+python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_local.yaml
 
 # Dry run (2 steps, verify pipeline)
 python fine_tuning/qwen/train_ray.py --config fine_tuning/qwen/lora_config_tiny.yaml --dry-run
@@ -279,7 +279,7 @@ Exception: `pip install uv` is acceptable only as Dockerfile bootstrap.
 
 ### LoRA Configuration
 
-LoRA hyperparameters (see `fine_tuning/qwen/lora_config.yaml`):
+LoRA hyperparameters (see `fine_tuning/qwen/lora_config_local.yaml`):
 - Rank: 16
 - Alpha: 32
 - Dropout: 0.05

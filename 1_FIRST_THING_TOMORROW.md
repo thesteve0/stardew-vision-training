@@ -10,8 +10,8 @@ Previous results cleared. Code now aligned between `train.py` and `train_ray.py`
 
 ## Runs to Do
 
-1. **Local standalone** (`train.py` + `lora_config.yaml`) — establishes new baseline with corrected code
-2. **Local Ray** (`train_ray.py` + `lora_config.yaml`) — confirms Ray wrapper doesn't change results
+1. **Local standalone** (`train.py` + `lora_config_local.yaml`) — establishes new baseline with corrected code
+2. **Local Ray** (`train_ray.py` + `lora_config_ray_local.yaml`) — confirms Ray wrapper doesn't change results
 3. **Rebuild and push image** — build locally, port-forward to OpenShift registry, push (see below)
 4. **Cluster Ray** (`oc apply -f deploy/rayjob.yaml`) — compare distributed to local
 
@@ -51,7 +51,8 @@ The cluster config has a different effective batch size (16 vs 8 local). If clus
 |------|-------------|
 | `fine_tuning/qwen/train.py` | Standalone SFTTrainer |
 | `fine_tuning/qwen/train_ray.py` | Ray Train wrapper |
-| `fine_tuning/qwen/lora_config.yaml` | Local config (FP16, batch 2, grad_accum 4) |
+| `fine_tuning/qwen/lora_config_local.yaml` | Local standalone config (FP16, batch 2, grad_accum 4) |
+| `fine_tuning/qwen/lora_config_ray_local.yaml` | Local Ray config (FP16, batch 2, grad_accum 4) |
 | `fine_tuning/qwen/lora_config_ray_cluster.yaml` | Cluster config (BF16, batch 4, grad_accum 2, 2 workers) |
 | `deploy/rayjob.yaml` | KubeRay RayJob manifest |
 | `evaluation/run_baseline.py` | Eval script |

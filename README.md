@@ -32,7 +32,7 @@ stardew-vision-training/
 │   └── assets/                 # Sprites, item manifest, templates
 │
 ├── fine_tuning/
-│   └── qwen/                   # train.py, data_prep.py, lora_config.yaml
+│   └── qwen/                   # train.py, data_prep.py, lora_config_local.yaml
 │
 ├── evaluation/                 # Eval scripts, prompt, scoring, inference
 │
@@ -86,7 +86,7 @@ python synthetic_data/generate_variations.py \
 
 # Train with LoRA
 python fine_tuning/qwen/train.py \
-  --config fine_tuning/qwen/lora_config.yaml \
+  --config fine_tuning/qwen/lora_config_local.yaml \
   --output-dir experiments/qwen-tv-fish-v1
 ```
 

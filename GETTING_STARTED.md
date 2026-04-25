@@ -117,7 +117,7 @@ Creates 100 variations from real examples.
 
 ```bash
 python fine_tuning/qwen/train.py \
-  --config fine_tuning/qwen/lora_config.yaml \
+  --config fine_tuning/qwen/lora_config_local.yaml \
   --output-dir experiments/qwen-tv-fish-v1
 ```
 
@@ -156,7 +156,8 @@ python scripts/upload_to_hub.py \
 
 **fine_tuning/** — Training scripts
 - `qwen/train.py` — LoRA fine-tuning script
-- `qwen/lora_config.yaml` — Hyperparameters
+- `qwen/lora_config_local.yaml` — Hyperparameters (standalone training)
+- `qwen/lora_config_ray_local.yaml` — Hyperparameters (local Ray training)
 
 **evaluation/** — Metrics
 - `eval_tool_calling.py` — Tool selection accuracy
@@ -254,7 +255,7 @@ uv sync
 
 ### Out of Memory During Training
 
-**Fix**: Reduce batch size or gradient accumulation steps in `lora_config.yaml`.
+**Fix**: Reduce batch size or gradient accumulation steps in `lora_config_local.yaml`.
 
 ```yaml
 per_device_train_batch_size: 1
