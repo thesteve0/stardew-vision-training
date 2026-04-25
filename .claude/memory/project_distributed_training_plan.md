@@ -1,22 +1,21 @@
 ---
 name: Distributed training plan
-description: Ray Train validated locally; next step is KubeRay on OpenShift AI 3.3 with 2 NVIDIA L40S GPUs
+description: Ray Train code aligned; fresh runs needed local then cluster; effective batch size mismatch identified
 type: project
-originSessionId: 1cac980d-2f8c-45f6-8704-b8fe85e81113
+originSessionId: 561452f1-3c56-4b65-ab91-c8ad240d347b
 ---
-Ray Train integration is complete and validated (2026-04-23). Full training run achieved 97.6% eval accuracy.
+Ray Train integration complete but results not yet validated with aligned code (as of 2026-04-25).
 
 Progression:
-1. ~~Ray Train locally (devcontainer)~~ — DONE
-2. KubeRay on OpenShift AI — NEXT
-3. Kubeflow on OpenShift AI — future
+1. Local standalone (train.py) — NEXT (fresh baseline)
+2. Local Ray (train_ray.py) — after standalone baseline
+3. KubeRay on OpenShift AI — after local Ray matches
+4. Kubeflow on OpenShift AI — future
 
-**Why:** Scale beyond single-GPU and enable reproducible training on the cluster.
+**Why:** Previous distributed run produced worse results. Root causes identified: `gradient_checkpointing_kwargs` mismatch (now fixed) and effective batch size difference (8 local vs 16 cluster, not yet fixed).
 
 **How to apply:**
-- `train_ray.py` is ready for multi-GPU — uses `prepare_trainer()` + `RayTrainReportCallback`
-- `lora_config_cluster.yaml` has BF16, batch 4, S3 data paths (CHANGEME placeholders)
-- `deploy/rayjob.yaml` has the KubeRay manifest (CHANGEME placeholders for namespace, S3 bucket, MLflow URI, container image)
-- Container image TBD: candidate `quay.io/opendatahub/odh-pipeline-runtime-pytorch-cuda-py312-ubi9`
-- Need to: upload datasets to S3, confirm container image, coordinate MLflow URI with James Harmison
-- Key code difference vs local: no `device_map="auto"` for multi-worker, BF16 instead of FP16
+- Both `train.py` and `train_ray.py` now use `use_reentrant=False` — aligned
+- `lora_config_cluster.yaml` has effective batch 16 (4 × 2 workers × 2 grad_accum). To match local's 8, set `gradient_accumulation_steps: 1`
+- `deploy/rayjob.yaml` ready with PVC-based data mounting
+- Cluster: 1x L40S (autoscales to 4), BF16 capable
