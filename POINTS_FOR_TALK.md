@@ -33,17 +33,18 @@ KubeFlow was slightly faster per step (8.6s vs 8.8s) due to less framework overh
 | Run | Hardware | Steps | Wall time | s/step | Accuracy |
 |-----|----------|-------|-----------|--------|----------|
 | Local standalone | 1x AMD Strix Halo (gfx1151) | 291 | ~424 min | ~87.4 | 96.0% |
+| Cluster KubeFlow 1-GPU | 1x NVIDIA L40S | 291 | ~82 min | ~16.9 | 96.8% |
 | Cluster Ray v3 (batch=16) | 2x NVIDIA L40S | 147 | ~42 min | ~17 | 90.4% |
 | Cluster Ray v4 (batch=8) | 2x NVIDIA L40S | 291 | ~43 min | ~8.8 | 96.0% |
 | Cluster KubeFlow v1 (batch=8) | 2x NVIDIA L40S | 291 | ~42 min | ~8.6 | 97.6% |
 
-Wall time is nearly identical across cluster runs despite 2x more steps in v4/KubeFlow — smaller batches run faster per step since there's no gradient accumulation synchronization wait.
+The 1-GPU L40S run cleanly isolates the chip-to-chip gap: **5.2x faster** than Strix Halo (82 min vs 424 min). Adding a second L40S gives a further **1.96x speedup** (82 min → 42 min) — near-perfect linear scaling. The full 10x gap from iGPU to 2-GPU cluster decomposes neatly into ~5x chip + ~2x parallelism.
 
 ## iGPU vs data center GPU — the real numbers
 
-**Training**: Strix Halo takes ~10x longer end-to-end (424 min vs 43 min). This breaks down as:
-- **~5x per-GPU compute gap**: Each forward+backward pass takes ~22s on Strix Halo vs ~4.4s on L40S (comparing per fwd+bwd pass: local does 4 per step with grad_accum=4, cluster does 2 per GPU with grad_accum=2)
-- **2x from parallelism**: Two L40S GPUs split the gradient accumulation work
+**Training**: Strix Halo takes ~10x longer end-to-end (424 min vs 42 min on 2-GPU). Now we can decompose this cleanly with the 1-GPU L40S baseline (82 min):
+- **~5.2x per-GPU compute gap**: 424 min (Strix Halo) vs 82 min (1x L40S) — same effective batch size, same steps, pure chip difference
+- **~1.96x from parallelism**: 82 min (1x L40S) vs 42 min (2x L40S) — near-perfect linear scaling
 
 **Eval inference (125 images, fine-tuned model)**: Strix Halo ~8 min (~3.85s/sample), L40S cluster ~5 min (~2.4s/sample) — only **~1.6x difference**. Inference is memory-bandwidth-bound (autoregressive decoding), so raw TFLOPS matters far less than during training. The Strix Halo is surprisingly competitive for serving a 7B VLM.
 

@@ -23,7 +23,7 @@ spec:
             - --output-dir
             - /checkpoints/eval-results
             - --run-name
-            - cluster-kubeflow-v1
+            - cluster-kubeflow-1gpu-v1
           env:
             - name: PYTHONPATH
               value: "/app"

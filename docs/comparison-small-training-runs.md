@@ -4,30 +4,30 @@ All evaluations use the held-out eval set from `datasets/eval_set.json`, which i
 
 ## Per-class accuracy
 
-| Screen Type | Local (standalone) | Local (Ray) | Cluster Ray v3 (batch=16) | Cluster Ray v4 (batch=8) | Cluster KubeFlow v1 |
-|-------------|-------------------|------------|----------------------|---------------------|---------------------|
-| tv_dialog   | 96% (24/25) | — | 96% (24/25) | 100% (25/25) | 96% (24/25) |
-| caught_fish | 92% (23/25) | — | 68% (17/25) | 88% (22/25) | 100% (25/25) |
-| pierre_shop | 96% (24/25) | — | 100% (25/25) | 100% (25/25) | 100% (25/25) |
-| no_tools    | 98% (49/50) | — | 94% (47/50) | 96% (48/50) | 96% (48/50) |
-| **Overall** | **96.0%** (120/125) | — | **90.4%** (113/125) | **96.0%** (120/125) | **97.6%** (122/125) |
-| **Macro F1** | **0.962** | — | **0.904** | **0.962** | **0.978** |
+| Screen Type | Local (standalone) | Local (Ray) | Cluster Ray v3 (batch=16) | Cluster Ray v4 (batch=8) | Cluster KubeFlow v1 | Cluster KubeFlow 1-GPU |
+|-------------|-------------------|------------|----------------------|---------------------|---------------------|------------------------|
+| tv_dialog   | 96% (24/25) | — | 96% (24/25) | 100% (25/25) | 96% (24/25) | 100% (25/25) |
+| caught_fish | 92% (23/25) | — | 68% (17/25) | 88% (22/25) | 100% (25/25) | 96% (24/25) |
+| pierre_shop | 96% (24/25) | — | 100% (25/25) | 100% (25/25) | 100% (25/25) | 100% (25/25) |
+| no_tools    | 98% (49/50) | — | 94% (47/50) | 96% (48/50) | 96% (48/50) | 94% (47/50) |
+| **Overall** | **96.0%** (120/125) | — | **90.4%** (113/125) | **96.0%** (120/125) | **97.6%** (122/125) | **96.8%** (121/125) |
+| **Macro F1** | **0.962** | — | **0.904** | **0.962** | **0.978** | **0.970** |
 
 ## Training metrics
 
-| Metric | Local (standalone) | Local (Ray) | Cluster Ray v3 (batch=16) | Cluster Ray v4 (batch=8) | Cluster KubeFlow v1 |
-|--------|-------------------|------------|----------------------|---------------------|---------------------|
-| Training samples | 775 | — | 775 | 775 | 775 |
-| Epochs | 3 | — | 3 | 3 | 3 |
-| Steps | 291 | — | 147 | 291 | 291 |
-| Effective batch size | 8 | — | 16 | 8 | 8 |
-| Final train loss | 0.013 | — | 0.0035 | 0.013 | 0.013 |
-| Eval loss (epoch 3) | 0.0050 | — | 0.0042 | — | 0.0048 |
-| Token accuracy (train) | 100% | — | 99.9% | — | 100% |
-| Token accuracy (eval) | 99.9% | — | 99.9% | — | 99.9% |
-| Wall time | ~424 min | — | ~42 min | ~43 min | ~42 min |
-| Seconds/step | ~87.4 | — | ~17 | ~8.8 | ~8.6 |
-| Hardware | AMD Strix Halo (gfx1151) | — | 2x NVIDIA L40S | 2x NVIDIA L40S | 2x NVIDIA L40S |
+| Metric | Local (standalone) | Local (Ray) | Cluster Ray v3 (batch=16) | Cluster Ray v4 (batch=8) | Cluster KubeFlow v1 | Cluster KubeFlow 1-GPU |
+|--------|-------------------|------------|----------------------|---------------------|---------------------|------------------------|
+| Training samples | 775 | — | 775 | 775 | 775 | 775 |
+| Epochs | 3 | — | 3 | 3 | 3 | 3 |
+| Steps | 291 | — | 147 | 291 | 291 | 291 |
+| Effective batch size | 8 | — | 16 | 8 | 8 | 8 |
+| Final train loss | 0.013 | — | 0.0035 | 0.013 | 0.013 | 0.014 |
+| Eval loss (epoch 3) | 0.0050 | — | 0.0042 | — | 0.0048 | 0.0045 |
+| Token accuracy (train) | 100% | — | 99.9% | — | 100% | 100% |
+| Token accuracy (eval) | 99.9% | — | 99.9% | — | 99.9% | 99.9% |
+| Wall time | ~424 min | — | ~42 min | ~43 min | ~42 min | ~82 min |
+| Seconds/step | ~87.4 | — | ~17 | ~8.8 | ~8.6 | ~16.9 |
+| Hardware | AMD Strix Halo (gfx1151) | — | 2x NVIDIA L40S | 2x NVIDIA L40S | 2x NVIDIA L40S | 1x NVIDIA L40S |
 
 ## Key observations
 
@@ -36,5 +36,7 @@ All evaluations use the held-out eval set from `datasets/eval_set.json`, which i
 - **KubeFlow matches local baseline**: KubeFlow v1 hit 97.6% (same as original local training), while Ray v4 with identical hyperparameters scored 96.0%. The difference is likely Ray Train overhead vs native torchrun
 - **caught_fish fully solved by KubeFlow**: 68% (Ray v3) → 88% (Ray v4) → 100% (KubeFlow v1)
 - **KubeFlow is slightly faster**: 8.6s/step vs 8.8s/step (Ray v4) — lower overhead from torchrun vs Ray Train wrapper
-- **Wall time nearly identical** (~42 min) across cluster runs despite different step counts — more steps with smaller batches run faster per step
-- **iGPU vs data center**: Strix Halo takes ~10x longer to train (424 min vs 43 min), combining ~5x per-GPU compute difference and 2x GPU parallelism. For eval inference, the gap narrows to ~1.6x (8 min vs 5 min) since autoregressive decoding is memory-bandwidth-bound
+- **Wall time nearly identical** (~42 min) across 2-GPU cluster runs despite different step counts — more steps with smaller batches run faster per step
+- **2-GPU speedup is ~1.96x**: 1-GPU L40S took 82 min vs 42 min for 2-GPU — near-perfect linear scaling. The 16.9s/step (1-GPU) vs 8.6s/step (2-GPU) confirms the speedup comes from parallelism, not reduced grad_accum overhead
+- **1-GPU L40S is ~5.2x faster than Strix Halo**: 82 min vs 424 min, isolating the chip-to-chip performance gap without multi-GPU effects
+- **iGPU vs data center**: Strix Halo takes ~10x longer to train (424 min vs 42 min on 2-GPU), combining ~5x per-GPU compute difference and ~2x GPU parallelism. For eval inference, the gap narrows to ~1.6x since autoregressive decoding is memory-bandwidth-bound
