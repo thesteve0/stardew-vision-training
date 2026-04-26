@@ -1,52 +1,27 @@
 ---
-name: Training results and baseline eval
-description: Complete training comparison — baseline 51.2%, local standalone 96.0%, Ray 96.0%, KubeFlow 97.6%; batch size and prompt impact documented
+name: Training results — all runs complete
+description: Full training comparison across all paths — local 96.0%, Ray 96.0%, KubeFlow 2-GPU 97.6%, KubeFlow 1-GPU 96.8%; training phase is done
 type: project
-originSessionId: a1c61036-d7f5-4801-a415-0d618bd9f3e7
 ---
-## Baseline eval (2026-04-26, untuned Qwen2.5-VL-7B-Instruct)
+Training is complete as of 2026-04-26. All orchestration paths validated.
 
-Using production-matched prompt (`evaluation/prompt.py`):
-- tv_dialog: 80.0%
-- caught_fish: 20.0%
-- pierre_shop: 96.0%
-- no_tools: 30.0%
-- **Overall: 51.2%, Macro F1: 59.0%**
+## Summary of all runs (775 samples, 3 epochs, effective batch 8)
 
-Results in `experiments/eval-baseline-v1/` and MLflow experiment `qwen-tool-selection-eval`.
+| Run | Hardware | Steps | Wall time | s/step | Accuracy |
+|-----|----------|-------|-----------|--------|----------|
+| Local standalone | 1x AMD Strix Halo | 291 | ~424 min | ~87.4 | 96.0% |
+| Cluster KubeFlow 1-GPU | 1x NVIDIA L40S | 291 | ~82 min | ~16.9 | 96.8% |
+| Cluster Ray v4 | 2x NVIDIA L40S | 291 | ~43 min | ~8.8 | 96.0% |
+| Cluster KubeFlow v1 | 2x NVIDIA L40S | 291 | ~42 min | ~8.6 | 97.6% |
 
-## Prompt impact on baseline
+Baseline (untuned): 51.2%. Prompt engineering alone lifted no_tools from 0% to 30%.
 
-First baseline run (old prompt) scored **0% on no_tools**. After prompt was updated to match production, no_tools jumped to **30%** — prompt engineering alone, no fine-tuning.
+## Key findings
 
-## Local standalone results (AMD Strix Halo, 775 samples, 3 epochs)
+- Effective batch size mismatch (8→16) caused 7.2 point accuracy drop (Ray v3: 90.4%)
+- L40S is 5.2x faster than Strix Halo per GPU; 2-GPU scaling is near-linear (1.96x)
+- All effective-batch-8 runs are within noise (96.0–97.6%)
 
-| Metric | Value |
-|--------|-------|
-| Accuracy | 96.0% (120/125) |
-| Macro F1 | 0.962 |
-| Wall time | ~424 min (~7h) |
-| s/step | ~87.4 |
-| Best checkpoint | epoch 2 (checkpoint-200) |
+**Why:** Training phase is done. Next focus is MLflow dashboard and adapter deployment.
 
-Per-class: tv_dialog 96%, caught_fish 92%, pierre_shop 96%, no_tools 98%.
-Results in `experiments/eval-local-standalone-v1/`.
-
-## Cluster training results (2x L40S, 775 samples, 3 epochs)
-
-| Run | Effective batch | Steps | Wall time | s/step | Accuracy |
-|-----|----------------|-------|-----------|--------|----------|
-| Ray v3 (batch=16) | 16 | 147 | ~42 min | ~17 | 90.4% |
-| Ray v4 (batch=8) | 8 | 291 | ~43 min | ~8.8 | 96.0% |
-| KubeFlow v1 (batch=8) | 8 | 291 | ~42 min | ~8.6 | 97.6% |
-
-Batch size doubling (8→16) caused a 7.2 point accuracy drop. Local standalone matches Ray v4 exactly (96.0%), confirming Ray wrapper doesn't degrade quality.
-
-## Eval throughput
-
-Local AMD iGPU (Strix Halo): ~8 min / 125 images (~3.85s/sample with LoRA). Cluster L40S: ~5 min. Baseline (no LoRA) was ~63 min (~30s/sample).
-
-## Remaining work
-
-- Local Ray training run still TODO (skipped — moving to laptop/cluster)
-- All comparison data in `docs/comparison-small-training-runs.md`
+**How to apply:** Best adapter is from KubeFlow 2-GPU run. Files on cluster PVC and locally at `experiments/qwen-tool-select-cluster-kubeflow-v1/`. Full comparison in `docs/comparison-small-training-runs.md`.

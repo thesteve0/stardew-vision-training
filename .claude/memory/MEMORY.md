@@ -1,11 +1,11 @@
 - [Synthetic screenshot approach](feedback_synthetic_screenshots.md) — clean backgrounds + on-the-fly overlay, not in-place text replacement; annotation-based positioning
-- [Evaluation phases](project_eval_phases.md) — Phase 1 (tool selection) complete at 97.6%; Phase 2 (text correction) next
+- [Evaluation phases](project_eval_phases.md) — Phase 1 (tool selection) complete at 97.6%; Phase 2 (text correction) next after adapter deployment
 - [EvalHub references](reference_evalhub.md) — Red Hat AI eval platform; standalone first, optional BYOF wrapper later
-- [Distributed training — completed](project_distributed_training_plan.md) — Ray 96.0%, KubeFlow 97.6%; batch size mismatch was root cause of earlier poor results
+- [Distributed training — done](project_distributed_training_plan.md) — All paths validated; KubeFlow preferred (simpler, faster); training phase complete
 - [Cluster hardware and ops](project_cluster_hardware.md) — 1x L40S (autoscales to 4) on OpenShift; MLflow deployed via operator
-- [Cluster setup — operational](project_cluster_setup_progress.md) — Both Ray and KubeFlow paths validated; PVCs for data, code baked into images
+- [Cluster setup — operational](project_cluster_setup_progress.md) — Ray, KubeFlow 2-GPU, KubeFlow 1-GPU all validated; known issues documented
 - [KubeRay approach rethink](feedback_kuberay_approach.md) — Use PVCs for data, bake code into image, avoid S3 for everything
 - [Dual machine setup](user_dual_machine.md) — Desktop + laptop both AMD ROCm, syncs via git push/pull
 - [Commit after steps](feedback_commit_after_steps.md) — Ask about git commit+push after each plan step
-- [Training results and baseline eval](project_training_results.md) — Baseline 51.2%, Ray 96.0%, KubeFlow 97.6%; batch size and prompt impact documented
+- [Training results — complete](project_training_results.md) — Local 96.0%, Ray 96.0%, KubeFlow 2-GPU 97.6%, 1-GPU 96.8%; training done, next is MLflow + adapter deploy
 - [Never use pip](feedback_no_pip.md) — Always uv add/sync; pip overwrites ROCm packages

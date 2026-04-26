@@ -19,7 +19,7 @@ This file provides context to Claude Code when working on the training repositor
 - **FP16 only** (no BF16, no INT4 on this hardware)
 - HuggingFace: transformers, peft, trl, datasets, evaluate
 - VLM: Qwen/Qwen2.5-VL-7B-Instruct
-- Distributed training: Ray Train on OpenShift AI
+- Distributed training: KubeFlow PyTorchJob and Ray Train on OpenShift AI
 - Experiment tracking: MLFlow
 - OCR: PaddleOCR (CPU-only, for annotation tools)
 
@@ -71,7 +71,7 @@ stardew-vision-training/
 - `data_prep.py` splits tool-calling classes at 85/15 train/val, then caps no_tools training at 2:1 ratio vs average tool class, with overflow going to validation (see split strategy below)
 - Phase 1 focus: tool selection (screen → correct tool call or "no tool" refusal)
 
-**Current task**: Rerunning training with corrected code (aligned `gradient_checkpointing_kwargs` between local and distributed). Fresh baseline needed before cluster comparison.
+**Current task**: Training complete across all paths (local, Ray, KubeFlow). Best result: 97.6% (KubeFlow 2-GPU). Next: get MLflow dashboard working, then transition adapter to production app (`stardew-vision`).
 
 ---
 
@@ -211,7 +211,17 @@ python fine_tuning/qwen/train_ray.py \
   --storage-path s3://bucket/ray-results/
 ```
 
-Uses LoRA (rank=16, alpha=32) via PEFT. Ray checkpoints saved to `~/ray_results/`. Standalone checkpoints saved to `experiments/`.
+**KubeFlow PyTorchJob** (multi-GPU on OpenShift AI, no Ray):
+```bash
+# Submitted via deploy/pytorchjob.yaml — uses torchrun, not Ray
+oc apply -f deploy/pytorchjob.yaml
+oc logs -f stardew-lora-train-kf-master-0
+
+# Single-GPU baseline (config via ConfigMap, no image rebuild)
+oc apply -f deploy/pytorchjob-1gpu.yaml
+```
+
+Uses LoRA (rank=16, alpha=32) via PEFT. Standalone checkpoints saved to `experiments/`. Cluster checkpoints on PVC at `/checkpoints/model-output/`.
 
 ### 7. Evaluation
 

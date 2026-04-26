@@ -1,59 +1,47 @@
-# Next Steps — Fresh Training Baseline
+# Next Steps — MLflow and Adapter Deployment
 
-Previous results cleared. Code now aligned between `train.py` and `train_ray.py` (both use `gradient_checkpointing_kwargs: {"use_reentrant": False}`).
+Training is complete. All orchestration paths validated (local, Ray, KubeFlow). Best result: 97.6% accuracy (KubeFlow 2-GPU). Full comparison in `docs/comparison-small-training-runs.md`.
 
-## What Changed
+## Immediate Tasks
 
-- Added `gradient_checkpointing_kwargs: {"use_reentrant": False}` to `train.py` (was only in `train_ray.py`)
-- Changed `lora_config_ray_cluster.yaml` to 3 epochs (was 2), bumped run name to v3
-- Deleted all previous experiment results, eval runs, and model checkpoints
+### 1. Get MLflow Working on Cluster
 
-## Runs to Do
+MLflow is deployed via the `mlflows.mlflow.opendatahub.io` CRD in `redhat-ods-applications`. Training logs metrics there but we haven't verified the dashboard or queried runs programmatically.
 
-1. **Local standalone** (`train.py` + `lora_config_local.yaml`) — establishes new baseline with corrected code
-2. **Local Ray** (`train_ray.py` + `lora_config_ray_local.yaml`) — confirms Ray wrapper doesn't change results
-3. **Rebuild and push image** — build locally, port-forward to OpenShift registry, push (see below)
-4. **Cluster Ray** (`oc apply -f deploy/rayjob.yaml`) — compare distributed to local
+- Verify MLflow UI is accessible (port-forward or route)
+- Confirm training runs from KubeFlow v1 and 1-GPU runs are visible
+- Fix any auth/TLS issues between training pods and MLflow service
 
-## Building and Pushing the Training Image
+### 2. Transition Adapter to Production App
 
-Build on the host (not in devcontainer), then push to the OpenShift internal registry via port-forward:
+The trained LoRA adapter needs to move from this training repo to the `stardew-vision` production app. The handoff path:
 
-```bash
-# Build
-podman build -t stardew-training:latest -f deploy/Dockerfile .
+1. Upload adapter to HuggingFace Hub (`scripts/upload_to_hub.py`)
+2. Production app pulls adapter for KServe serving
+3. Verify adapter loads correctly in the serving pipeline
 
-# Port-forward to OpenShift registry
-oc port-forward svc/image-registry -n openshift-image-registry 5000:5000 &
+### Key Decision
 
-# Auth, tag, push
-podman login localhost:5000 -u $(oc whoami) -p $(oc whoami -t) --tls-verify=false
-podman tag stardew-training:latest localhost:5000/stardew-vision-training/stardew-training:latest
-podman push localhost:5000/stardew-vision-training/stardew-training:latest --tls-verify=false
+Which adapter to ship? The KubeFlow 2-GPU run (97.6%) is the best, but all runs with effective batch 8 are within noise (96.0–97.6%). The adapter files are on the cluster PVC at `/checkpoints/model-output/` and locally at `experiments/qwen-tool-select-cluster-kubeflow-v1/`.
 
-# Cleanup
-kill %1
-```
+## Completed Work (for reference)
 
-After push, submit the RayJob:
-```bash
-oc apply -f deploy/rayjob.yaml
-oc logs -f job/stardew-lora-train -n stardew-vision-training
-```
-
-## Key Question
-
-The cluster config has a different effective batch size (16 vs 8 local). If cluster results are worse, reduce `gradient_accumulation_steps` from 2 to 1 in `lora_config_ray_cluster.yaml` to match the local effective batch size of 8.
+| Run | Hardware | Accuracy | Wall time |
+|-----|----------|----------|-----------|
+| Local standalone | 1x AMD Strix Halo | 96.0% | ~424 min |
+| Cluster KubeFlow 1-GPU | 1x NVIDIA L40S | 96.8% | ~82 min |
+| Cluster Ray v4 | 2x NVIDIA L40S | 96.0% | ~43 min |
+| Cluster KubeFlow v1 | 2x NVIDIA L40S | 97.6% | ~42 min |
 
 ## Key Files
 
 | File | What it does |
 |------|-------------|
-| `fine_tuning/qwen/train.py` | Standalone SFTTrainer |
-| `fine_tuning/qwen/train_ray.py` | Ray Train wrapper |
-| `fine_tuning/qwen/lora_config_local.yaml` | Local standalone config (FP16, batch 2, grad_accum 4) |
-| `fine_tuning/qwen/lora_config_ray_local.yaml` | Local Ray config (FP16, batch 2, grad_accum 4) |
-| `fine_tuning/qwen/lora_config_ray_cluster.yaml` | Cluster config (BF16, batch 4, grad_accum 2, 2 workers) |
-| `deploy/rayjob.yaml` | KubeRay RayJob manifest |
-| `evaluation/run_baseline.py` | Eval script |
-| `docs/comparison-small-training-runs.md` | Results comparison (empty — to be filled) |
+| `fine_tuning/qwen/train_kubeflow.py` | KubeFlow/torchrun training script |
+| `deploy/pytorchjob.yaml` | 2-GPU KubeFlow PyTorchJob manifest |
+| `deploy/pytorchjob-1gpu.yaml` | 1-GPU baseline (config via ConfigMap) |
+| `deploy/eval-job.yaml` | Evaluation job manifest |
+| `RUNNING_KUBEFLOW_DISTRIBUTED.md` | Full KubeFlow runbook |
+| `RUNNING_RAY_DISTRIBUTED.md` | Ray runbook (for reference) |
+| `docs/comparison-small-training-runs.md` | All training results |
+| `POINTS_FOR_TALK.md` | Talk points with findings |
