@@ -31,8 +31,10 @@ All evaluations use the held-out eval set from `datasets/eval_set.json`, which i
 
 ## Key observations
 
+- **Local standalone matches Ray v4**: Both scored 96.0% (120/125) — confirms the Ray wrapper doesn't degrade quality when batch size is matched
 - **Batch size matters**: Ray v3 (effective batch 16) scored 90.4%, Ray v4 (effective batch 8, matching local) scored 96.0% — a 5.6 point improvement just from aligning batch size
 - **KubeFlow matches local baseline**: KubeFlow v1 hit 97.6% (same as original local training), while Ray v4 with identical hyperparameters scored 96.0%. The difference is likely Ray Train overhead vs native torchrun
 - **caught_fish fully solved by KubeFlow**: 68% (Ray v3) → 88% (Ray v4) → 100% (KubeFlow v1)
 - **KubeFlow is slightly faster**: 8.6s/step vs 8.8s/step (Ray v4) — lower overhead from torchrun vs Ray Train wrapper
-- **Wall time nearly identical** (~42 min) across all runs despite different step counts — more steps with smaller batches run faster per step
+- **Wall time nearly identical** (~42 min) across cluster runs despite different step counts — more steps with smaller batches run faster per step
+- **iGPU vs data center**: Strix Halo takes ~10x longer to train (424 min vs 43 min), combining ~5x per-GPU compute difference and 2x GPU parallelism. For eval inference, the gap narrows to ~1.6x (8 min vs 5 min) since autoregressive decoding is memory-bandwidth-bound
