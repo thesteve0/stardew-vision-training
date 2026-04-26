@@ -80,7 +80,9 @@
       "WebFetch(domain:community-charts.github.io)",
       "WebFetch(domain:mlflow.org)",
       "Bash(oc wait *)",
-      "Bash(tar xf *)"
+      "Bash(tar xf *)",
+      "Bash(oc cp *)",
+      "Bash(git commit *)"
     ]
   },
   "model": "claude-opus-4-6"

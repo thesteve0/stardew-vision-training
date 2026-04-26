@@ -79,14 +79,18 @@ Once GPU nodes are ready and worker pods are scheduled:
 # Watch RayJob status (provisioning → running → succeeded/failed)
 oc get rayjob stardew-lora-train -w
 
+# Get the RayCluster name (includes a random suffix, e.g. stardew-lora-train-njr5q)
+CLUSTER_NAME=$(oc get rayjob stardew-lora-train -o jsonpath='{.status.rayClusterName}')
+
 # Watch Ray worker pods scheduling and running
-oc get pods -l ray.io/cluster=stardew-lora-train-raycluster -w
+oc get pods -l ray.io/cluster=$CLUSTER_NAME -w
 
 # Tail training logs (all pods, prefixed)
 oc logs -f -l job-name=stardew-lora-train --prefix
 
 # Ray dashboard (open http://localhost:8265 in browser)
-oc port-forward svc/stardew-lora-train-head-svc 8265:8265
+HEAD_SVC=$(oc get svc -l ray.io/cluster=$CLUSTER_NAME -l ray.io/node-type=head -o name)
+oc port-forward $HEAD_SVC 8265:8265
 ```
 
 ---
