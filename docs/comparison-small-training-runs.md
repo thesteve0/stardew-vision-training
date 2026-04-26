@@ -6,28 +6,28 @@ All evaluations use the held-out eval set from `datasets/eval_set.json`, which i
 
 | Screen Type | Local (standalone) | Local (Ray) | Cluster Ray v3 (batch=16) | Cluster Ray v4 (batch=8) | Cluster KubeFlow v1 |
 |-------------|-------------------|------------|----------------------|---------------------|---------------------|
-| tv_dialog   | — | — | 96% (24/25) | 100% (25/25) | 96% (24/25) |
-| caught_fish | — | — | 68% (17/25) | 88% (22/25) | 100% (25/25) |
-| pierre_shop | — | — | 100% (25/25) | 100% (25/25) | 100% (25/25) |
-| no_tools    | — | — | 94% (47/50) | 96% (48/50) | 96% (48/50) |
-| **Overall** | — | — | **90.4%** (113/125) | **96.0%** (120/125) | **97.6%** (122/125) |
-| **Macro F1** | — | — | **0.904** | **0.962** | **0.978** |
+| tv_dialog   | 96% (24/25) | — | 96% (24/25) | 100% (25/25) | 96% (24/25) |
+| caught_fish | 92% (23/25) | — | 68% (17/25) | 88% (22/25) | 100% (25/25) |
+| pierre_shop | 96% (24/25) | — | 100% (25/25) | 100% (25/25) | 100% (25/25) |
+| no_tools    | 98% (49/50) | — | 94% (47/50) | 96% (48/50) | 96% (48/50) |
+| **Overall** | **96.0%** (120/125) | — | **90.4%** (113/125) | **96.0%** (120/125) | **97.6%** (122/125) |
+| **Macro F1** | **0.962** | — | **0.904** | **0.962** | **0.978** |
 
 ## Training metrics
 
 | Metric | Local (standalone) | Local (Ray) | Cluster Ray v3 (batch=16) | Cluster Ray v4 (batch=8) | Cluster KubeFlow v1 |
 |--------|-------------------|------------|----------------------|---------------------|---------------------|
-| Training samples | — | — | 775 | 775 | 775 |
-| Epochs | — | — | 3 | 3 | 3 |
-| Steps | — | — | 147 | 291 | 291 |
-| Effective batch size | — | — | 16 | 8 | 8 |
-| Final train loss | — | — | 0.0035 | 0.013 | 0.013 |
-| Eval loss (epoch 3) | — | — | 0.0042 | — | 0.0048 |
-| Token accuracy (train) | — | — | 99.9% | — | 100% |
-| Token accuracy (eval) | — | — | 99.9% | — | 99.9% |
-| Wall time | — | — | ~42 min | ~43 min | ~42 min |
-| Seconds/step | — | — | ~17 | ~8.8 | ~8.6 |
-| Hardware | — | — | 2x NVIDIA L40S | 2x NVIDIA L40S | 2x NVIDIA L40S |
+| Training samples | 775 | — | 775 | 775 | 775 |
+| Epochs | 3 | — | 3 | 3 | 3 |
+| Steps | 291 | — | 147 | 291 | 291 |
+| Effective batch size | 8 | — | 16 | 8 | 8 |
+| Final train loss | 0.013 | — | 0.0035 | 0.013 | 0.013 |
+| Eval loss (epoch 3) | 0.0050 | — | 0.0042 | — | 0.0048 |
+| Token accuracy (train) | 100% | — | 99.9% | — | 100% |
+| Token accuracy (eval) | 99.9% | — | 99.9% | — | 99.9% |
+| Wall time | ~424 min | — | ~42 min | ~43 min | ~42 min |
+| Seconds/step | ~87.4 | — | ~17 | ~8.8 | ~8.6 |
+| Hardware | AMD Strix Halo (gfx1151) | — | 2x NVIDIA L40S | 2x NVIDIA L40S | 2x NVIDIA L40S |
 
 ## Key observations
 
