@@ -1,14 +1,14 @@
 ---
 name: Evaluation phases strategy
-description: Phase 1 (tool selection) needs fresh baseline after code alignment; Phase 2 (text correction) after cluster deployment
+description: Phase 1 (tool selection) complete — 97.6% on KubeFlow; Phase 2 (text correction) is next
 type: project
-originSessionId: 561452f1-3c56-4b65-ab91-c8ad240d347b
+originSessionId: 0b1c1454-7379-436e-a94a-f747fbf758da
 ---
 Evaluation and training are split into two sequential phases:
 
-**Phase 1: Tool Selection** — Can the model call the correct extraction tool (or decline) given a screenshot? Pure classification. Previously achieved 97.6% but results cleared for fresh baseline with corrected code (2026-04-25).
+**Phase 1: Tool Selection** — Complete. Best result: 97.6% (KubeFlow PyTorchJob, 2x L40S). Baseline (untuned): 51.2%. Both Ray and KubeFlow paths validated.
 
-**Phase 2: Text Correction** — After a tool returns OCR text, can the model clean it up and produce accurate narration? Text-to-text correction. Comes after Phase 1 is deployed to cluster.
+**Phase 2: Text Correction** — After a tool returns OCR text, can the model clean it up and produce accurate narration? Text-to-text correction. Next focus area.
 
 **Why:** If the model calls the wrong tool, nothing downstream matters. Tool selection is the gate.
 

@@ -1,0 +1,138 @@
+# KubeFlow PyTorchJob — single-GPU baseline on L40S
+#
+# Same training recipe as the 2-GPU run (effective batch=8) but on 1 GPU,
+# to isolate chip speedup from multi-GPU parallelism.
+# Config is injected via ConfigMap — no image rebuild needed.
+#
+# Prerequisites: same as pytorchjob.yaml (see that file for details)
+#
+# Usage:
+#   oc apply -f deploy/pytorchjob-1gpu.yaml
+#   oc logs -f stardew-lora-train-1gpu-master-0
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lora-config-1gpu
+  namespace: stardew-vision-training
+data:
+  lora_config_kubeflow_cluster_1gpu.yaml: |
+    model_name: "Qwen/Qwen2.5-VL-7B-Instruct"
+    torch_dtype: "bfloat16"
+    lora:
+      r: 16
+      lora_alpha: 32
+      lora_dropout: 0.05
+      target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+      bias: "none"
+      task_type: "CAUSAL_LM"
+    training:
+      output_dir: "/checkpoints/model-output"
+      num_train_epochs: 3
+      per_device_train_batch_size: 4
+      per_device_eval_batch_size: 2
+      gradient_accumulation_steps: 2      # effective batch = 4 * 1 GPU * 2 = 8
+      learning_rate: 1.0e-4
+      warmup_steps: 50
+      logging_steps: 10
+      save_steps: 100
+      eval_steps: 100
+      eval_strategy: "epoch"
+      save_strategy: "epoch"
+      save_total_limit: 3
+      load_best_model_at_end: true
+      metric_for_best_model: "eval_loss"
+      greater_is_better: false
+      fp16: false
+      bf16: true
+      dataloader_num_workers: 4
+      gradient_checkpointing: true
+      optim: "adamw_torch"
+      lr_scheduler_type: "cosine"
+      max_grad_norm: 1.0
+      report_to: "none"
+    data:
+      train_file: "datasets/splits/train.jsonl"
+      eval_file: "datasets/splits/val.jsonl"
+    mlflow:
+      experiment_name: "qwen-tool-selection-train"
+      tracking_uri: "https://mlflow.redhat-ods-applications.svc:8443"
+      run_name: "tool-select-kubeflow-1gpu-v1"
+    seed: 42
+---
+apiVersion: kubeflow.org/v1
+kind: PyTorchJob
+metadata:
+  name: stardew-lora-train-1gpu
+  namespace: stardew-vision-training
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+            - name: pytorch
+              image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training-kf:latest
+              workingDir: /app
+              command:
+                - python
+              args:
+                - "-m"
+                - "fine_tuning.qwen.train_kubeflow"
+                - "--config"
+                - "/config/lora_config_kubeflow_cluster_1gpu.yaml"
+              env:
+                - name: TRAINING_DATA_ROOT
+                  value: "/data"
+                - name: MLFLOW_WORKSPACE
+                  value: "stardew-vision-training"
+                - name: PYTHONPATH
+                  value: "/app"
+              envFrom:
+                - secretRef:
+                    name: s3-credentials
+                - secretRef:
+                    name: mlflow-credentials
+              resources:
+                requests:
+                  cpu: "4"
+                  memory: "32Gi"
+                  nvidia.com/gpu: 1
+                limits:
+                  cpu: "8"
+                  memory: "48Gi"
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: training-data
+                  mountPath: /data
+                  readOnly: true
+                - name: training-checkpoints
+                  mountPath: /checkpoints
+                - name: config
+                  mountPath: /config
+                  readOnly: true
+                - name: dshm
+                  mountPath: /dev/shm
+          volumes:
+            - name: training-data
+              persistentVolumeClaim:
+                claimName: training-data
+            - name: training-checkpoints
+              persistentVolumeClaim:
+                claimName: training-checkpoints
+            - name: config
+              configMap:
+                name: lora-config-1gpu
+            - name: dshm
+              emptyDir:
+                medium: Memory
+                sizeLimit: 8Gi
+          tolerations:
+            - key: nvidia.com/gpu
+              operator: Exists
+              effect: NoSchedule

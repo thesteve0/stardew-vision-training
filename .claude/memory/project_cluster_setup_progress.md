@@ -1,39 +1,22 @@
 ---
-name: Cluster setup progress
-description: OpenShift AI infrastructure is ready; code reverted to clean state; need fresh plan with PVCs
+name: Cluster setup — operational
+description: OpenShift AI cluster fully operational; both Ray and KubeFlow training paths validated
 type: project
-originSessionId: 08a9a0d5-1cf4-4bcc-a246-d057ff1cac92
+originSessionId: 0b1c1454-7379-436e-a94a-f747fbf758da
 ---
-## Infrastructure still in place on the cluster (2026-04-24)
+## Cluster infrastructure (operational as of 2026-04-26)
 
 - Namespace: `stardew-vision-training`
-- OBC: `stardew-training-bucket` → bucket `stardew-training-de41fcf6-ae74-43cc-8d20-64be0dc8c9a4`
-- S3 endpoints: internal `https://s3.openshift-storage.svc:443`, external `https://s3-openshift-storage.apps.stardew-vision.sandbox5291.opentlc.com`
-- MLflow: running in `redhat-ods-applications`, UI at `https://data-science-gateway.apps.stardew-vision.sandbox5291.opentlc.com/mlflow`
-- Secrets in `stardew-vision-training`: `s3-credentials`, `mlflow-credentials`, `hf-credentials`
-- Secret `hf-credentials` also in `stardew-vision` namespace
 - GPU: 1x L40S (g6e.2xlarge), autoscales to 4
-- BuildConfig `stardew-training` exists with ImageStream — can rebuild images with `oc start-build`
-- Training data already uploaded to S3 (may still be useful for final model export, not for training data access)
-- Base image: `registry.redhat.io/rhoai/odh-training-cuda128-torch29-py312-rhel9:v3.4.0-ea.2` — has most deps pre-installed
+- MLflow: running in `redhat-ods-applications`
+- Secrets: `s3-credentials`, `mlflow-credentials`, `hf-credentials`
+- PVCs: `training-data`, `training-checkpoints`
+- Training data mounted via PVCs (not S3)
+- Code baked into container images
 
-## Code state
+## Validated training paths
 
-All code reverted to pre-session state (commit c72b453). No today's changes committed. Config files still have CHANGEME placeholders.
+- **Ray Train**: `deploy/rayjob.yaml` + `stardew-training` image
+- **KubeFlow PyTorchJob**: `deploy/pytorchjob.yaml` + `stardew-training-kf` image
 
-## Known bugs to fix (minimal, targeted changes)
-
-1. `train_ray.py` `_resolve()` — doesn't handle `https://` URLs, mangles MLflow tracking URI
-2. `train_ray.py` — needs `gradient_checkpointing_kwargs={"use_reentrant": False}` for DDP + LoRA
-3. `lora_config_ray_cluster.yaml` — set to 2 epochs (user preference, validated by val loss curve)
-
-## Plan for next session
-
-Start with `EnterPlanMode`. Design the architecture around:
-- PVCs for training data (mount datasets into pods)
-- Training code baked into container image
-- PVC or alternative for Ray checkpoint storage
-- MLflow tracking to the cluster server
-- S3 only for final model export to HF Hub and for vLLM access
-
-**Why:** PVC-based approach matches how OpenShift AI training jobs work natively and avoids all the S3 SSL/CA issues.
+Both produce comparable results (~96-97.6% accuracy).

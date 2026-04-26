@@ -23,12 +23,12 @@ spec:
             - --output-dir
             - /checkpoints/eval-results
             - --run-name
-            - cluster-v1
+            - cluster-kubeflow-v1
           env:
             - name: PYTHONPATH
               value: "/app"
             - name: MLFLOW_TRACKING_URI
-              value: ""
+              value: "file:///tmp/mlruns"
           resources:
             requests:
               cpu: "4"

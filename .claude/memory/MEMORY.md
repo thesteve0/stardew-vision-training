@@ -1,11 +1,11 @@
 - [Synthetic screenshot approach](feedback_synthetic_screenshots.md) — clean backgrounds + on-the-fly overlay, not in-place text replacement; annotation-based positioning
-- [Evaluation phases](project_eval_phases.md) — Phase 1 (tool selection) complete at 97.6%; Phase 2 (text correction) next after cluster deploy
+- [Evaluation phases](project_eval_phases.md) — Phase 1 (tool selection) complete at 97.6%; Phase 2 (text correction) next
 - [EvalHub references](reference_evalhub.md) — Red Hat AI eval platform; standalone first, optional BYOF wrapper later
-- [Distributed training plan](project_distributed_training_plan.md) — Ray Train done locally; KubeRay on OpenShift AI is next; deploy/rayjob.yaml ready with placeholders
+- [Distributed training — completed](project_distributed_training_plan.md) — Ray 96.0%, KubeFlow 97.6%; batch size mismatch was root cause of earlier poor results
 - [Cluster hardware and ops](project_cluster_hardware.md) — 1x L40S (autoscales to 4) on OpenShift; MLflow deployed via operator
-- [Cluster setup progress](project_cluster_setup_progress.md) — Infra done; S3-heavy approach failed; rework with PVCs tomorrow
+- [Cluster setup — operational](project_cluster_setup_progress.md) — Both Ray and KubeFlow paths validated; PVCs for data, code baked into images
 - [KubeRay approach rethink](feedback_kuberay_approach.md) — Use PVCs for data, bake code into image, avoid S3 for everything
 - [Dual machine setup](user_dual_machine.md) — Desktop + laptop both AMD ROCm, syncs via git push/pull
 - [Commit after steps](feedback_commit_after_steps.md) — Ask about git commit+push after each plan step
-- [Training results and data balance](project_training_results.md) — 97.6% accuracy; no_tools 2:1 ratio validated; 2 epochs optimal; val loss overfits at epoch 3
+- [Training results and baseline eval](project_training_results.md) — Baseline 51.2%, Ray 96.0%, KubeFlow 97.6%; batch size and prompt impact documented
 - [Never use pip](feedback_no_pip.md) — Always uv add/sync; pip overwrites ROCm packages

@@ -198,15 +198,11 @@ def train_func(config: dict):
         trainer.save_model(output_dir)
         processor.save_pretrained(output_dir)
 
-        t_eval_start = time.time()
-        metrics = trainer.evaluate()
-        eval_duration = time.time() - t_eval_start
-        logger.info("Evaluation finished in %.1f min", eval_duration / 60)
-
-        metrics["train_wall_time_min"] = round(train_duration / 60, 1)
-        metrics["eval_wall_time_min"] = round(eval_duration / 60, 1)
-        metrics["total_wall_time_min"] = round((train_duration + eval_duration) / 60, 1)
-        metrics["seconds_per_step"] = round(train_duration / max(steps, 1), 1)
+        metrics = {
+            "train_wall_time_min": round(train_duration / 60, 1),
+            "seconds_per_step": round(train_duration / max(steps, 1), 1),
+            "train_loss": train_state.log_history[-1].get("train_loss", 0),
+        }
         if use_mlflow:
             mlflow.log_metrics(metrics)
             mlflow.end_run()

@@ -1,21 +1,16 @@
 ---
-name: Distributed training plan
-description: Ray Train code aligned; fresh runs needed local then cluster; effective batch size mismatch identified
+name: Distributed training — completed
+description: Both Ray Train and KubeFlow PyTorchJob runs completed on OpenShift AI cluster; batch size issue resolved
 type: project
-originSessionId: 561452f1-3c56-4b65-ab91-c8ad240d347b
+originSessionId: 0b1c1454-7379-436e-a94a-f747fbf758da
 ---
-Ray Train integration complete but results not yet validated with aligned code (as of 2026-04-25).
+Distributed training is complete as of 2026-04-26. Both orchestration paths validated on the cluster.
 
-Progression:
-1. Local standalone (train.py) — NEXT (fresh baseline)
-2. Local Ray (train_ray.py) — after standalone baseline
-3. KubeRay on OpenShift AI — after local Ray matches
-4. Kubeflow on OpenShift AI — future
+**Completed runs:**
+1. Local standalone (train.py) — baseline established
+2. Cluster Ray Train — 96.0% accuracy (effective batch 8, 2x L40S)
+3. Cluster KubeFlow PyTorchJob — 97.6% accuracy (effective batch 8, 2x L40S)
 
-**Why:** Previous distributed run produced worse results. Root causes identified: `gradient_checkpointing_kwargs` mismatch (now fixed) and effective batch size difference (8 local vs 16 cluster, not yet fixed).
+**Key finding:** Effective batch size mismatch (8 local vs 16 cluster) was the root cause of Ray v3's poor results (90.4%). Fixed by setting `gradient_accumulation_steps: 1` in cluster configs.
 
-**How to apply:**
-- Both `train.py` and `train_ray.py` now use `use_reentrant=False` — aligned
-- `lora_config_ray_cluster.yaml` has effective batch 16 (4 × 2 workers × 2 grad_accum). To match local's 8, set `gradient_accumulation_steps: 1`
-- `deploy/rayjob.yaml` ready with PVC-based data mounting
-- Cluster: 1x L40S (autoscales to 4), BF16 capable
+**How to apply:** Both paths are production-ready. KubeFlow is slightly simpler (thinner wrapper, master trains with GPU). Ray adds fault tolerance and actor-based orchestration. Detailed comparison in `POINTS_FOR_TALK.md`.

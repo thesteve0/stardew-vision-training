@@ -1,13 +1,34 @@
 ---
-name: Training results cleared for fresh baseline
-description: All previous training results deleted 2026-04-25; rerunning with aligned gradient_checkpointing_kwargs between local and distributed
+name: Training results and baseline eval
+description: Complete training comparison — baseline 51.2%, Ray 96.0%, KubeFlow 97.6%; batch size and prompt impact documented
 type: project
-originSessionId: 561452f1-3c56-4b65-ab91-c8ad240d347b
+originSessionId: 0b1c1454-7379-436e-a94a-f747fbf758da
 ---
-Previous results (97.6% accuracy) cleared on 2026-04-25 to establish a clean baseline.
+## Baseline eval (2026-04-26, untuned Qwen2.5-VL-7B-Instruct)
 
-**What changed:** `train.py` now uses `gradient_checkpointing_kwargs: {"use_reentrant": False}`, matching `train_ray.py`. Previous runs had this mismatch, making local-vs-distributed comparisons invalid.
+Using production-matched prompt (`evaluation/prompt.py`):
+- tv_dialog: 80.0%
+- caught_fish: 20.0%
+- pierre_shop: 96.0%
+- no_tools: 30.0%
+- **Overall: 51.2%, Macro F1: 59.0%**
 
-**Why:** Distributed training produced worse results than local. Investigation found the `use_reentrant` mismatch and an effective batch size difference (8 local vs 16 cluster). Need clean runs with aligned code to isolate the real cause.
+Results in `experiments/eval-baseline-v1/` and MLflow experiment `qwen-tool-selection-eval`.
 
-**How to apply:** Run local standalone first to establish baseline, then local Ray, then cluster Ray. Record all results in `docs/comparison-small-training-runs.md`. If cluster is still worse, adjust `gradient_accumulation_steps` in cluster config to match effective batch size of 8.
+## Prompt impact on baseline
+
+First baseline run (commit `a0c3e78`, old prompt) scored **0% on no_tools**. After prompt was updated to match production (commit `f2ebebf`), no_tools jumped to **30%** — prompt engineering alone, no fine-tuning.
+
+## Cluster training results (2x L40S, 775 samples, 3 epochs)
+
+| Run | Effective batch | Steps | Wall time | s/step | Accuracy |
+|-----|----------------|-------|-----------|--------|----------|
+| Ray v3 (batch=16) | 16 | 147 | ~42 min | ~17 | 90.4% |
+| Ray v4 (batch=8) | 8 | 291 | ~43 min | ~8.8 | 96.0% |
+| KubeFlow v1 (batch=8) | 8 | 291 | ~42 min | ~8.6 | 97.6% |
+
+Batch size doubling (8→16) caused a 7.2 point accuracy drop. The 1.6 point Ray-vs-KubeFlow difference is likely statistical noise (2 samples out of 125).
+
+## Eval throughput
+
+Local AMD iGPU (Strix Halo): ~63 min / 125 images (~30s/sample). Cluster L40S: ~5 min. 12x throughput difference.
