@@ -1,0 +1,170 @@
+# KubeFlow PyTorchJob for Stardew Vision LoRA fine-tuning on OpenShift AI
+#
+# Prerequisites:
+#   1. KubeFlow Training Operator installed on the cluster
+#   2. Kubernetes secrets: s3-credentials, mlflow-credentials
+#   3. PVCs: training-data (populated with datasets), training-checkpoints
+#   4. Container image built and pushed (see CLAUDE.md § "Building and Pushing the Training Image")
+#      Use Dockerfile.kubeflow instead of Dockerfile:
+#        podman build -t stardew-training-kf:latest -f deploy/Dockerfile.kubeflow .
+#
+# Usage:
+#   oc apply -f deploy/pytorchjob.yaml
+#   oc logs -f -l training.kubeflow.org/job-name=stardew-lora-train-kf --prefix
+#
+# Topology: Master (rank 0, 1 GPU) + 1 Worker (rank 1, 1 GPU) = 2 GPUs total
+# Unlike RayJob where the head node has no GPU, PyTorchJob's Master participates
+# in training and needs a GPU.
+
+apiVersion: kubeflow.org/v1
+kind: PyTorchJob
+metadata:
+  name: stardew-lora-train-kf
+  namespace: stardew-vision-training
+spec:
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+            - name: pytorch
+              image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training-kf:latest
+              workingDir: /app
+              command:
+                - torchrun
+              args:
+                - "--nnodes=2"
+                - "--nproc_per_node=1"
+                - "--master_addr=$(MASTER_ADDR)"
+                - "--master_port=$(MASTER_PORT)"
+                - "--node_rank=$(RANK)"
+                - "-m"
+                - "fine_tuning.qwen.train_kubeflow"
+                - "--config"
+                - "/app/fine_tuning/qwen/lora_config_kubeflow_cluster.yaml"
+              env:
+                - name: NCCL_DEBUG
+                  value: "INFO"
+                - name: NCCL_SOCKET_IFNAME
+                  value: "eth0"
+                - name: TRAINING_DATA_ROOT
+                  value: "/data"
+                - name: MLFLOW_WORKSPACE
+                  value: "stardew-vision-training"
+                - name: PYTHONPATH
+                  value: "/app"
+              envFrom:
+                - secretRef:
+                    name: s3-credentials
+                - secretRef:
+                    name: mlflow-credentials
+              resources:
+                requests:
+                  cpu: "4"
+                  memory: "32Gi"
+                  nvidia.com/gpu: 1
+                limits:
+                  cpu: "8"
+                  memory: "48Gi"
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: training-data
+                  mountPath: /data
+                  readOnly: true
+                - name: training-checkpoints
+                  mountPath: /checkpoints
+                - name: dshm
+                  mountPath: /dev/shm
+          volumes:
+            - name: training-data
+              persistentVolumeClaim:
+                claimName: training-data
+            - name: training-checkpoints
+              persistentVolumeClaim:
+                claimName: training-checkpoints
+            - name: dshm
+              emptyDir:
+                medium: Memory
+                sizeLimit: 8Gi
+          tolerations:
+            - key: nvidia.com/gpu
+              operator: Exists
+              effect: NoSchedule
+
+    Worker:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          containers:
+            - name: pytorch
+              image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training-kf:latest
+              workingDir: /app
+              command:
+                - torchrun
+              args:
+                - "--nnodes=2"
+                - "--nproc_per_node=1"
+                - "--master_addr=$(MASTER_ADDR)"
+                - "--master_port=$(MASTER_PORT)"
+                - "--node_rank=$(RANK)"
+                - "-m"
+                - "fine_tuning.qwen.train_kubeflow"
+                - "--config"
+                - "/app/fine_tuning/qwen/lora_config_kubeflow_cluster.yaml"
+              env:
+                - name: NCCL_DEBUG
+                  value: "INFO"
+                - name: NCCL_SOCKET_IFNAME
+                  value: "eth0"
+                - name: TRAINING_DATA_ROOT
+                  value: "/data"
+                - name: MLFLOW_WORKSPACE
+                  value: "stardew-vision-training"
+                - name: PYTHONPATH
+                  value: "/app"
+              envFrom:
+                - secretRef:
+                    name: s3-credentials
+                - secretRef:
+                    name: mlflow-credentials
+              resources:
+                requests:
+                  cpu: "4"
+                  memory: "32Gi"
+                  nvidia.com/gpu: 1
+                limits:
+                  cpu: "8"
+                  memory: "48Gi"
+                  nvidia.com/gpu: 1
+              volumeMounts:
+                - name: training-data
+                  mountPath: /data
+                  readOnly: true
+                - name: training-checkpoints
+                  mountPath: /checkpoints
+                - name: dshm
+                  mountPath: /dev/shm
+          volumes:
+            - name: training-data
+              persistentVolumeClaim:
+                claimName: training-data
+            - name: training-checkpoints
+              persistentVolumeClaim:
+                claimName: training-checkpoints
+            - name: dshm
+              emptyDir:
+                medium: Memory
+                sizeLimit: 8Gi
+          tolerations:
+            - key: nvidia.com/gpu
+              operator: Exists
+              effect: NoSchedule
