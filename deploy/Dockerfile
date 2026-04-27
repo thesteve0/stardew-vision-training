@@ -7,7 +7,10 @@ WORKDIR /app
 # Only install what's missing for training.
 RUN pip install --no-cache-dir \
     "ray[default,train]>=2.40.0" \
-    "qwen-vl-utils>=0.0.8"
+    "qwen-vl-utils>=0.0.8" \
+    "mlflow @ git+https://github.com/red-hat-data-services/mlflow@rhoai-3.2" \
+    "psutil>=5.9.0" \
+    "nvidia-ml-py>=12.0.0"
 
 COPY fine_tuning/ fine_tuning/
 COPY evaluation/ evaluation/

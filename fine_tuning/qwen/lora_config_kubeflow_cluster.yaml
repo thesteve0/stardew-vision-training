@@ -47,7 +47,7 @@ training:
   optim: "adamw_torch"
   lr_scheduler_type: "cosine"
   max_grad_norm: 1.0
-  report_to: "none"
+  report_to: "mlflow"
 
 data:
   train_file: "datasets/splits/train.jsonl"
@@ -56,6 +56,7 @@ data:
 mlflow:
   experiment_name: "qwen-tool-selection-train"
   tracking_uri: "https://mlflow.redhat-ods-applications.svc:8443"
-  run_name: "tool-select-kubeflow-v1"
+  run_name: "tool-select-kubeflow-v3"
+  workspace: "stardew-vision-training"
 
 seed: 42

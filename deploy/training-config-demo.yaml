@@ -1,0 +1,80 @@
+# ConfigMap for demo training parameters.
+#
+# To change training parameters (learning rate, batch size, epochs, etc.):
+#   1. Edit the training-config.yaml section below
+#   2. oc apply -f deploy/training-config-demo.yaml
+#   3. Delete and resubmit the RayJob:
+#        oc delete rayjob stardew-lora-train-demo
+#        oc apply -f deploy/rayjob-demo.yaml
+#
+# No image rebuild needed for parameter changes.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: training-config-demo
+  namespace: stardew-vision-training
+data:
+  training-config.yaml: |
+    # LoRA Fine-Tuning Configuration for KubeRay Demo on OpenShift AI
+    # NVIDIA L40S GPUs (48GB VRAM, BF16 capable), 2 workers
+    #
+    # Conference demo: 15% of training data, 3 epochs, full MLflow logging.
+    # Designed to complete in ~14 min so the audience can watch training
+    # progress live in both the Ray Dashboard and the MLflow UI.
+
+    model_name: "Qwen/Qwen2.5-VL-7B-Instruct"
+    torch_dtype: "bfloat16"
+
+    lora:
+      r: 16
+      lora_alpha: 32
+      lora_dropout: 0.05
+      target_modules:
+        - "q_proj"
+        - "k_proj"
+        - "v_proj"
+        - "o_proj"
+      bias: "none"
+      task_type: "CAUSAL_LM"
+
+    training:
+      output_dir: "/checkpoints/model-demo"
+      num_train_epochs: 3
+      per_device_train_batch_size: 4
+      per_device_eval_batch_size: 2
+      gradient_accumulation_steps: 1
+      learning_rate: 1.0e-4
+      warmup_steps: 5
+      logging_steps: 1
+      save_steps: 999999
+      eval_steps: 999999
+      eval_strategy: "epoch"
+      save_strategy: "no"
+      save_total_limit: 1
+      load_best_model_at_end: false
+      metric_for_best_model: "eval_loss"
+      greater_is_better: false
+      fp16: false
+      bf16: true
+      dataloader_num_workers: 4
+      gradient_checkpointing: true
+      optim: "adamw_torch"
+      lr_scheduler_type: "cosine"
+      max_grad_norm: 1.0
+      report_to: "mlflow"
+
+    data:
+      train_file: "datasets/splits/train_demo.jsonl"
+      eval_file: "datasets/splits/val.jsonl"
+
+    mlflow:
+      experiment_name: "qwen-tool-selection-demo"
+      tracking_uri: "https://mlflow.redhat-ods-applications.svc:8443"
+      run_name: "demo-ray-v1"
+      workspace: "stardew-vision-training"
+      log_system_metrics: true
+      log_artifacts: true
+      log_step_timing: true
+
+    seed: 42

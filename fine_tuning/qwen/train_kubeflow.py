@@ -67,10 +67,20 @@ def train_func(config: dict):
     use_mlflow = yaml_config["training"].get("report_to") == "mlflow"
     if world_rank == 0 and use_mlflow:
         token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-        if os.path.exists(token_path):
+        if not os.environ.get("MLFLOW_TRACKING_TOKEN") and os.path.exists(token_path):
             with open(token_path) as f:
                 os.environ["MLFLOW_TRACKING_TOKEN"] = f.read().strip()
-        mlflow.set_tracking_uri(_resolve(yaml_config["mlflow"]["tracking_uri"]))
+
+        os.environ.setdefault("MLFLOW_TRACKING_INSECURE_TLS", "true")
+
+        tracking_uri = _resolve(yaml_config["mlflow"]["tracking_uri"])
+        os.environ["MLFLOW_TRACKING_URI"] = tracking_uri
+        mlflow.set_tracking_uri(tracking_uri)
+
+        workspace = yaml_config["mlflow"].get("workspace")
+        if workspace:
+            mlflow.set_workspace(workspace)
+
         mlflow.set_experiment(yaml_config["mlflow"]["experiment_name"])
         mlflow.start_run(run_name=yaml_config["mlflow"]["run_name"])
         mlflow.log_params({
@@ -159,11 +169,10 @@ def train_func(config: dict):
     }
 
     if dry_run:
-        training_kwargs["max_steps"] = 2
+        training_kwargs["max_steps"] = 4
         training_kwargs["logging_steps"] = 1
         training_kwargs["save_strategy"] = "no"
         training_kwargs["eval_strategy"] = "no"
-        training_kwargs["report_to"] = "none"
 
     sft_config = SFTConfig(**training_kwargs)
 

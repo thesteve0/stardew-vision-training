@@ -1,0 +1,148 @@
+# KubeRay RayJob for Stardew Vision conference demo on OpenShift AI
+#
+# Uses a separate demo image (stardew-training-demo) and 15% training
+# subset so the run completes in ~14 min. Audience watches both the
+# Ray Dashboard and the MLflow UI in real time.
+#
+# Training parameters are stored in a ConfigMap, not baked into the image.
+# To change parameters (learning rate, batch size, epochs, etc.):
+#   1. Edit deploy/training-config-demo.yaml
+#   2. oc apply -f deploy/training-config-demo.yaml
+#   3. Delete and resubmit this job
+#
+# Prerequisites:
+#   1. KubeRay operator installed on the cluster
+#   2. Kubernetes secrets: s3-credentials, mlflow-credentials
+#   3. PVCs: training-data (with train_demo.jsonl), training-checkpoints
+#   4. ConfigMap: oc apply -f deploy/training-config-demo.yaml
+#   5. Demo image built and pushed (only needs rebuild for code changes,
+#      NOT for parameter changes):
+#        podman build --no-cache -t stardew-training-demo:latest -f deploy/Dockerfile .
+#        podman tag stardew-training-demo:latest \
+#          localhost:5000/stardew-vision-training/stardew-training-demo:latest
+#        podman push localhost:5000/stardew-vision-training/stardew-training-demo:latest \
+#          --tls-verify=false
+#
+# Usage:
+#   oc apply -f deploy/training-config-demo.yaml
+#   oc apply -f deploy/rayjob-demo.yaml
+#   # Open Ray Dashboard and MLflow UI to watch live
+#   oc delete rayjob stardew-lora-train-demo   # clean up after talk
+
+apiVersion: ray.io/v1
+kind: RayJob
+metadata:
+  name: stardew-lora-train-demo
+  namespace: stardew-vision-training
+spec:
+  entrypoint: >-
+    python -m fine_tuning.qwen.train_ray
+    --config /config/training-config.yaml
+    --num-workers 2
+    --storage-path /checkpoints/ray-results/
+
+  runtimeEnvYAML: |
+    env_vars:
+      NCCL_DEBUG: "INFO"
+      TRAINING_DATA_ROOT: "/data"
+      MLFLOW_WORKSPACE: "stardew-vision-training"
+
+  shutdownAfterJobFinishes: true
+  ttlSecondsAfterFinished: 3600
+
+  rayClusterSpec:
+    headGroupSpec:
+      rayStartParams:
+        dashboard-host: "0.0.0.0"
+      template:
+        spec:
+          containers:
+            - name: ray-head
+              image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training-demo:latest
+              resources:
+                requests:
+                  cpu: "2"
+                  memory: "8Gi"
+                limits:
+                  cpu: "4"
+                  memory: "8Gi"
+              env:
+                - name: MLFLOW_WORKSPACE
+                  value: "stardew-vision-training"
+              envFrom:
+                - secretRef:
+                    name: s3-credentials
+                - secretRef:
+                    name: mlflow-credentials
+              volumeMounts:
+                - name: training-data
+                  mountPath: /data
+                  readOnly: true
+                - name: training-checkpoints
+                  mountPath: /checkpoints
+                - name: training-config
+                  mountPath: /config
+                  readOnly: true
+          volumes:
+            - name: training-data
+              persistentVolumeClaim:
+                claimName: training-data
+            - name: training-checkpoints
+              persistentVolumeClaim:
+                claimName: training-checkpoints
+            - name: training-config
+              configMap:
+                name: training-config-demo
+
+    workerGroupSpecs:
+      - replicas: 2
+        minReplicas: 2
+        maxReplicas: 2
+        groupName: gpu-workers
+        rayStartParams:
+          num-gpus: "1"
+        template:
+          spec:
+            containers:
+              - name: ray-worker
+                image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training-demo:latest
+                resources:
+                  requests:
+                    cpu: "4"
+                    memory: "32Gi"
+                    nvidia.com/gpu: 1
+                  limits:
+                    cpu: "8"
+                    memory: "48Gi"
+                    nvidia.com/gpu: 1
+                env:
+                  - name: MLFLOW_WORKSPACE
+                    value: "stardew-vision-training"
+                envFrom:
+                  - secretRef:
+                      name: s3-credentials
+                  - secretRef:
+                      name: mlflow-credentials
+                volumeMounts:
+                  - name: training-data
+                    mountPath: /data
+                    readOnly: true
+                  - name: training-checkpoints
+                    mountPath: /checkpoints
+                  - name: training-config
+                    mountPath: /config
+                    readOnly: true
+            volumes:
+              - name: training-data
+                persistentVolumeClaim:
+                  claimName: training-data
+              - name: training-checkpoints
+                persistentVolumeClaim:
+                  claimName: training-checkpoints
+              - name: training-config
+                configMap:
+                  name: training-config-demo
+            tolerations:
+              - key: nvidia.com/gpu
+                operator: Exists
+                effect: NoSchedule

@@ -33,6 +33,7 @@ from ray.train.huggingface.transformers import (
     prepare_trainer,
 )
 from ray.train.torch import TorchTrainer
+from transformers import TrainerCallback
 
 from fine_tuning.qwen.train import (
     EVAL_IMAGE_SIZE,
@@ -40,6 +41,23 @@ from fine_tuning.qwen.train import (
     load_images_transform,
     prepare_split_jsonl,
 )
+
+
+class StepTimingCallback(TrainerCallback):
+    """Logs wall-clock seconds per training step to MLflow."""
+
+    def __init__(self):
+        self._step_start = None
+
+    def on_step_begin(self, args, state, control, **kwargs):
+        self._step_start = time.time()
+
+    def on_step_end(self, args, state, control, **kwargs):
+        if self._step_start is not None:
+            import mlflow
+            duration = time.time() - self._step_start
+            mlflow.log_metric("step_wall_seconds", round(duration, 3), step=state.global_step)
+            self._step_start = None
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -112,12 +130,28 @@ def train_func(config: dict):
     use_mlflow = yaml_config["training"].get("report_to") == "mlflow"
     if world_rank == 0 and use_mlflow:
         token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-        if os.path.exists(token_path):
+        if not os.environ.get("MLFLOW_TRACKING_TOKEN") and os.path.exists(token_path):
             with open(token_path) as f:
                 os.environ["MLFLOW_TRACKING_TOKEN"] = f.read().strip()
-        mlflow.set_tracking_uri(_resolve(yaml_config["mlflow"]["tracking_uri"]))
+
+        os.environ.setdefault("MLFLOW_TRACKING_INSECURE_TLS", "true")
+
+        tracking_uri = _resolve(yaml_config["mlflow"]["tracking_uri"])
+        os.environ["MLFLOW_TRACKING_URI"] = tracking_uri
+        mlflow.set_tracking_uri(tracking_uri)
+
+        workspace = yaml_config["mlflow"].get("workspace")
+        if workspace:
+            mlflow.set_workspace(workspace)
+
+        if yaml_config["mlflow"].get("log_system_metrics"):
+            mlflow.enable_system_metrics_logging()
+
         mlflow.set_experiment(yaml_config["mlflow"]["experiment_name"])
-        mlflow.start_run(run_name=yaml_config["mlflow"]["run_name"])
+        mlflow.start_run(
+            run_name=yaml_config["mlflow"]["run_name"],
+            log_system_metrics=yaml_config["mlflow"].get("log_system_metrics", False),
+        )
         mlflow.log_params({
             "model_name": yaml_config["model_name"],
             "lora_r": yaml_config["lora"]["r"],
@@ -222,7 +256,6 @@ def train_func(config: dict):
         training_kwargs["logging_steps"] = 1
         training_kwargs["save_strategy"] = "no"
         training_kwargs["eval_strategy"] = "no"
-        training_kwargs["report_to"] = "none"
 
     sft_config = SFTConfig(**training_kwargs)
 
@@ -237,6 +270,8 @@ def train_func(config: dict):
 
     # Ray Train integration
     trainer.add_callback(RayTrainReportCallback())
+    if world_rank == 0 and use_mlflow and yaml_config["mlflow"].get("log_step_timing"):
+        trainer.add_callback(StepTimingCallback())
     trainer = prepare_trainer(trainer)
 
     logger.info("Starting training%s (Ray, %d workers)", " (dry run)" if dry_run else "", world_size)
@@ -269,6 +304,12 @@ def train_func(config: dict):
         metrics["seconds_per_step"] = round(train_duration / max(steps, 1), 1)
         if use_mlflow:
             mlflow.log_metrics(metrics)
+            if yaml_config["mlflow"].get("log_artifacts"):
+                config_path = config["config_path"]
+                if os.path.exists(config_path):
+                    mlflow.log_artifact(config_path, artifact_path="config")
+                if os.path.isdir(output_dir):
+                    mlflow.log_artifacts(output_dir, artifact_path="model")
             mlflow.end_run()
 
     logger.info("Training complete!")

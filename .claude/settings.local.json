@@ -82,7 +82,11 @@
       "Bash(oc wait *)",
       "Bash(tar xf *)",
       "Bash(oc cp *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(apt-get list *)",
+      "Bash(pip show *)",
+      "Bash(pdftotext \"/workspaces/stardew-vision-training/tmp/DRAFT for 3.4 updates_ Customize models to build gen AI applications.pdf\" -)",
+      "WebFetch(domain:docs.redhat.com)"
     ]
   },
   "model": "claude-opus-4-6"

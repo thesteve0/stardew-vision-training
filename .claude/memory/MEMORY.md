@@ -9,3 +9,4 @@
 - [Commit after steps](feedback_commit_after_steps.md) — Ask about git commit+push after each plan step
 - [Training results — complete](project_training_results.md) — Local 96.0%, Ray 96.0%, KubeFlow 2-GPU 97.6%, 1-GPU 96.8%; training done, next is MLflow + adapter deploy
 - [Never use pip](feedback_no_pip.md) — Always uv add/sync; pip overwrites ROCm packages
+- [MLflow integration — in progress](project_mlflow_integration.md) — Red Hat fork + internal URL + set_workspace(); code done, needs --no-cache rebuild + 2-GPU test

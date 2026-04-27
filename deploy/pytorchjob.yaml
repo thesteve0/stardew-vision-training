@@ -33,7 +33,7 @@ spec:
         spec:
           containers:
             - name: pytorch
-              image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training-kf:latest
+              image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training:latest
               workingDir: /app
               command:
                 - torchrun
@@ -47,6 +47,7 @@ spec:
                 - "fine_tuning.qwen.train_kubeflow"
                 - "--config"
                 - "/app/fine_tuning/qwen/lora_config_kubeflow_cluster.yaml"
+                - "--dry-run"
               env:
                 - name: NCCL_DEBUG
                   value: "INFO"
@@ -106,7 +107,7 @@ spec:
         spec:
           containers:
             - name: pytorch
-              image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training-kf:latest
+              image: image-registry.openshift-image-registry.svc:5000/stardew-vision-training/stardew-training:latest
               workingDir: /app
               command:
                 - torchrun
@@ -120,6 +121,7 @@ spec:
                 - "fine_tuning.qwen.train_kubeflow"
                 - "--config"
                 - "/app/fine_tuning/qwen/lora_config_kubeflow_cluster.yaml"
+                - "--dry-run"
               env:
                 - name: NCCL_DEBUG
                   value: "INFO"
