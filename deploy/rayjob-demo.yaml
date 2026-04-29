@@ -48,7 +48,7 @@ spec:
       MLFLOW_WORKSPACE: "stardew-vision-training"
 
   shutdownAfterJobFinishes: true
-  ttlSecondsAfterFinished: 3600
+  ttlSecondsAfterFinished: 1200
 
   rayClusterSpec:
     headGroupSpec:

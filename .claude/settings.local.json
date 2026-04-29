@@ -86,7 +86,9 @@
       "Bash(apt-get list *)",
       "Bash(pip show *)",
       "Bash(pdftotext \"/workspaces/stardew-vision-training/tmp/DRAFT for 3.4 updates_ Customize models to build gen AI applications.pdf\" -)",
-      "WebFetch(domain:docs.redhat.com)"
+      "WebFetch(domain:docs.redhat.com)",
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && head -30 {}')",
+      "Bash(xargs ls *)"
     ]
   },
   "model": "claude-opus-4-6"

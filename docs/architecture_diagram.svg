@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 440" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-auto">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowSlate" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-auto">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="440" rx="12" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="600" y="35" text-anchor="middle" font-size="22" font-weight="700" fill="#1e293b">Stardew Vision — Agentic Accessibility Pipeline</text>
+
+  <!-- Legend -->
+  <rect x="310" y="50" width="16" height="16" rx="4" fill="#6366f1"/>
+  <text x="332" y="63" font-size="12" fill="#475569">GPU (VLM)</text>
+  <rect x="420" y="50" width="16" height="16" rx="4" fill="#10b981"/>
+  <text x="442" y="63" font-size="12" fill="#475569">CPU</text>
+  <rect x="500" y="50" width="16" height="16" rx="4" fill="#f59e0b"/>
+  <text x="522" y="63" font-size="12" fill="#475569">Input</text>
+  <rect x="575" y="50" width="16" height="16" rx="4" fill="#f43f5e"/>
+  <text x="597" y="63" font-size="12" fill="#475569">Output</text>
+  <rect x="660" y="50" width="16" height="16" rx="4" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="4,3"/>
+  <text x="682" y="63" font-size="12" fill="#475569">Agent Framework</text>
+
+  <!-- ===== INPUT: Screenshot ===== -->
+  <rect x="15" y="118" width="115" height="68" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="72" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="#92400e">Screenshot</text>
+  <text x="72" y="165" text-anchor="middle" font-size="11" fill="#a16207">captured frame</text>
+
+  <!-- Arrow: Screenshot → Agent boundary -->
+  <line x1="130" y1="152" x2="160" y2="152" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <text x="145" y="143" text-anchor="middle" font-size="10" fill="#64748b" font-style="italic">image</text>
+
+  <!-- ===== AGENT FRAMEWORK CONTAINER ===== -->
+  <rect x="165" y="85" width="870" height="135" rx="14" fill="#f1f5f9" stroke="#334155" stroke-width="2.5" stroke-dasharray="8,4" fill-opacity="0.5"/>
+  <text x="600" y="103" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">Agentic Application (FastAPI)</text>
+
+  <!-- Pipeline box 1: VLM Classifies (GPU) -->
+  <rect x="182" y="112" width="172" height="80" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" filter="url(#shadow)"/>
+  <text x="268" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#3730a3">VLM Classifies</text>
+  <text x="268" y="156" text-anchor="middle" font-size="11" fill="#4f46e5">Qwen2.5-VL-7B + LoRA</text>
+  <text x="268" y="174" text-anchor="middle" font-size="10" fill="#6366f1" font-style="italic">returns tool_call or refusal</text>
+
+  <!-- Arrow: VLM → Extraction -->
+  <line x1="354" y1="152" x2="393" y2="152" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <text x="373" y="141" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">tool_call</text>
+  <text x="373" y="168" text-anchor="middle" font-size="9" fill="#475569" font-style="italic">agent</text>
+  <text x="373" y="178" text-anchor="middle" font-size="9" fill="#475569" font-style="italic">dispatches</text>
+
+  <!-- Pipeline box 2: Extraction Tool (CPU) -->
+  <rect x="398" y="112" width="172" height="80" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="484" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#065f46">Extraction Tool</text>
+  <text x="484" y="156" text-anchor="middle" font-size="11" fill="#047857">crop + PaddleOCR</text>
+  <text x="484" y="174" text-anchor="middle" font-size="10" fill="#10b981" font-style="italic">structured JSON output</text>
+
+  <!-- Arrow: Extraction → VLM Narrates -->
+  <line x1="570" y1="152" x2="609" y2="152" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <text x="589" y="143" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">JSON</text>
+
+  <!-- Pipeline box 3: VLM Narrates (GPU) -->
+  <rect x="614" y="112" width="172" height="80" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" filter="url(#shadow)"/>
+  <text x="700" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#3730a3">VLM Narrates</text>
+  <text x="700" y="156" text-anchor="middle" font-size="11" fill="#4f46e5">Qwen2.5-VL-7B + LoRA</text>
+  <text x="700" y="174" text-anchor="middle" font-size="10" fill="#6366f1" font-style="italic">natural language summary</text>
+
+  <!-- Arrow: VLM Narrates → TTS -->
+  <line x1="786" y1="152" x2="825" y2="152" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <text x="805" y="143" text-anchor="middle" font-size="9" fill="#64748b" font-weight="600">text</text>
+
+  <!-- Pipeline box 4: TTS (CPU) -->
+  <rect x="830" y="112" width="172" height="80" rx="10" fill="#d1fae5" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <text x="916" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#065f46">Text-to-Speech</text>
+  <text x="916" y="156" text-anchor="middle" font-size="11" fill="#047857">CPU inference</text>
+  <text x="916" y="174" text-anchor="middle" font-size="10" fill="#10b981" font-style="italic">generates audio file</text>
+
+  <!-- Arrow: Agent boundary → Audio Output -->
+  <line x1="1035" y1="152" x2="1065" y2="152" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+  <text x="1050" y="143" text-anchor="middle" font-size="10" fill="#64748b" font-style="italic">audio</text>
+
+  <!-- ===== OUTPUT: Audio ===== -->
+  <rect x="1070" y="118" width="115" height="68" rx="10" fill="#ffe4e6" stroke="#f43f5e" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1127" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="#9f1239">Audio Output</text>
+  <text x="1127" y="165" text-anchor="middle" font-size="11" fill="#e11d48">to player</text>
+
+  <!-- ===== ROW 2: Tool Dispatch Detail ===== -->
+
+  <text x="440" y="250" text-anchor="middle" font-size="13" font-weight="600" fill="#64748b">Agent Dispatches To:</text>
+
+  <!-- Dashed line from the dispatch point (between VLM and Extraction) down -->
+  <line x1="373" y1="192" x2="373" y2="234" stroke="#64748b" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <line x1="373" y1="234" x2="440" y2="252" stroke="#64748b" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+  <!-- Dispatch fan-out line -->
+  <line x1="440" y1="256" x2="440" y2="270" stroke="#64748b" stroke-width="1.2" stroke-dasharray="4,3"/>
+
+  <!-- Tool boxes -->
+  <!-- crop_tv_dialog -->
+  <rect x="55" y="278" width="175" height="58" rx="9" fill="#d1fae5" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="142" y="302" text-anchor="middle" font-size="12" font-weight="600" fill="#065f46">crop_tv_dialog</text>
+  <text x="142" y="318" text-anchor="middle" font-size="10" fill="#047857">weather, recipes, tips</text>
+
+  <!-- crop_caught_fish -->
+  <rect x="260" y="278" width="175" height="58" rx="9" fill="#d1fae5" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="347" y="302" text-anchor="middle" font-size="12" font-weight="600" fill="#065f46">crop_caught_fish</text>
+  <text x="347" y="318" text-anchor="middle" font-size="10" fill="#047857">fish name, size</text>
+
+  <!-- crop_pierres_detail -->
+  <rect x="465" y="278" width="195" height="58" rx="9" fill="#d1fae5" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="562" y="302" text-anchor="middle" font-size="12" font-weight="600" fill="#065f46">crop_pierres_detail</text>
+  <text x="562" y="318" text-anchor="middle" font-size="10" fill="#047857">item stats, price, desc</text>
+
+  <!-- no_tools (refusal) -->
+  <rect x="690" y="278" width="150" height="58" rx="9" fill="#fef9c3" stroke="#eab308" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="765" y="302" text-anchor="middle" font-size="12" font-weight="600" fill="#854d0e">no_tools</text>
+  <text x="765" y="318" text-anchor="middle" font-size="10" fill="#a16207">polite refusal — exit</text>
+
+  <!-- Dispatch fan lines -->
+  <line x1="440" y1="270" x2="142" y2="278" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="440" y1="270" x2="347" y2="278" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="440" y1="270" x2="562" y2="278" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="440" y1="270" x2="765" y2="278" stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- ===== ROW 3: Key Principle Banner ===== -->
+  <rect x="200" y="370" width="800" height="40" rx="20" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="600" y="395" text-anchor="middle" font-size="13" fill="#475569" font-weight="500">GPU for classification + narration  |  CPU for OCR, cropping, and TTS  |  LoRA adapter: ~12 MB</text>
+
+</svg>
