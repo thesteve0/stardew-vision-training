@@ -2,7 +2,7 @@
 - [Evaluation phases](project_eval_phases.md) — Phase 1 (tool selection) complete at 97.6%; Phase 2 (text correction) next after adapter deployment
 - [EvalHub references](reference_evalhub.md) — Red Hat AI eval platform; standalone first, optional BYOF wrapper later
 - [Distributed training — done](project_distributed_training_plan.md) — All paths validated; KubeFlow preferred (simpler, faster); training phase complete
-- [Cluster hardware and ops](project_cluster_hardware.md) — 1x L40S (autoscales to 4) on OpenShift; MLflow deployed via operator
+- [Cluster hardware, dashboards, and ops](project_cluster_hardware.md) — L40S GPUs on OpenShift; MLflow via gateway URL, Ray Dashboard via port-forward
 - [Cluster setup — operational](project_cluster_setup_progress.md) — Ray, KubeFlow 2-GPU, KubeFlow 1-GPU all validated; known issues documented
 - [KubeRay approach rethink](feedback_kuberay_approach.md) — Use PVCs for data, bake code into image, avoid S3 for everything
 - [Dual machine setup](user_dual_machine.md) — Desktop + laptop both AMD ROCm, syncs via git push/pull

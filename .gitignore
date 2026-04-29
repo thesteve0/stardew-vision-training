@@ -112,3 +112,4 @@ temp/
 .venv/
 models/
 rocm-provided.txt
+/TALK_OUTLINE.md
